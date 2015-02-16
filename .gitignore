@@ -1,3 +1,7 @@
+# Binary files
+
+x86/*
+
 # Object files
 *.o
 *.ko
