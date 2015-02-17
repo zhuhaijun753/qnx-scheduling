@@ -4,9 +4,10 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include "../spin/spin.h"
 #include "fixt_task.h"
 
-static const int poison_pill = 1;
+static const int POISON_PILL = 1;
 static void* fixt_task_routine(void*);
 
 struct fixt_task* fixt_task_new(int c, int p, int d)
@@ -38,39 +39,46 @@ sem_t fixt_task_run(struct fixt_task* task)
 
 void fixt_task_del(struct fixt_task* task)
 {
-	free(task->tk_thread);
-	free(task->tk_sem_continue);
 	free(task);
 }
 
 void fixt_task_stop(struct fixt_task* task)
 {
-	write(task->tk_poison_pipe[1], &poison_pill, sizeof(poison_pill));
-	sem_post(task->tk_sem_continue);
+	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
+
+	// Force thread to check for a poison pill (pthread_kill better than post)
+	pthread_kill(task->tk_thread, SIGALRM);
+	// sem_post(task->tk_sem_continue);
 
 	pthread_join(task->tk_thread, NULL);
 	close(task->tk_poison_pipe[0]);
 	close(task->tk_poison_pipe[1]);
 
 	sem_destroy(task->tk_sem_continue);
+	free(task->tk_thread);
+	free(task->tk_sem_continue);
 }
 
 void* fixt_task_routine(void* arg)
 {
 	struct fixt_task* task = (struct fixt_task*) arg;
-	int pill = 0;
+	int pill;
 	while (true)
 	{
+		// Wait for the scheduler to post
 		sem_wait(&task->tk_sem_continue);
-		read(task->tk_poison_pipe[0], &pill, sizeof(poison_pill));
-		if (pill == poison_pill)
+		// If the thread was told to quit while waiting, quit now!
+		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
+		if (pill == POISON_PILL)
 			break;
 
-		/* spin_for(task->tk_c) */
+		spin_for(task->tk_c);
 
+		// Notify the scheduler that this task is done executing
 		sem_post(&task->tk_sem_continue);
-		read(task->tk_poison_pipe[0], &pill, sizeof(poison_pill));
-		if (pill == poison_pill)
+		// If the thread was told to quit while spinning, quit now!
+		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
+		if (pill == POISON_PILL)
 			break;
 	}
 }
