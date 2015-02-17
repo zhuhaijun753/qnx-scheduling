@@ -8,7 +8,7 @@ extern struct fixt_algo;
 
 void fixt_algo_impl_rma_init(struct fixt_algo*);
 void fixt_algo_impl_rma_schedule(struct fixt_algo*);
-void fixt_algo_impl_rma_run(struct fixt_algo*);
+void fixt_algo_impl_rma_block(struct fixt_algo*);
 
 struct fixt_algo* fixt_algo_impl_rma_new();
 
