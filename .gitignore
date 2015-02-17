@@ -1,6 +1,6 @@
 # Binary files
-
-x86/*
+qnx-scheduling
+qnx-scheduling_g
 
 # Object files
 *.o
