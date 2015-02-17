@@ -18,14 +18,15 @@ struct fixt_task
 	sem_t tk_sem_cont;
 	sem_t tk_sem_done;
 
-	struct fixt_task *prev; // For private use by utlist.h
+	/* For private use by utlist.h */
+	struct fixt_task *prev;
 	struct fixt_task *next;
 };
 
-struct fixt_task* fixt_task_new(int c, int p, int d, void* (*rt)(void*));
+struct fixt_task* fixt_task_new(int c, int p, int d);
 void fixt_task_del(struct fixt_task*);
 
-sem_t fixt_task_run(struct fixt_task*);
+sem_t fixt_task_run(struct fixt_task*, int policy);
 void fixt_task_stop(struct fixt_task*);
 
 void fixt_task_set_prio(struct fixt_task*);

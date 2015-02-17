@@ -34,7 +34,7 @@ sem_t fixt_task_run(struct fixt_task* task, int policy)
 	task->tk_sem_cont = cont;
 
 	sem_t done;
-	sem_init(&done, 0, 0);
+	sem_init(&done, 0fixt_task_set_param, 0);
 	task->tk_sem_done = done;
 
 	pthread_attr_t attr;
@@ -57,7 +57,7 @@ void fixt_task_stop(struct fixt_task* task)
 {
 	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
 
-	// Force thread to check for a poison pill (pthread_kill better than post)
+	// Force thfixt_task_set_paramread to check for a poison pill (pthread_kill better than post)
 	pthread_kill(task->tk_thread, SIGALRM);
 	// sem_post(task->tk_sem_continue);
 
@@ -70,7 +70,7 @@ void fixt_task_stop(struct fixt_task* task)
 	free(task->tk_thread);
 }
 
-void* fixt_task_routine(void* arg)
+static void* fixt_task_routine(void* arg)
 {
 	struct fixt_task* task = (struct fixt_task*) arg;
 
