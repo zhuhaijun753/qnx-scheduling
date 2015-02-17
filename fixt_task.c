@@ -9,14 +9,14 @@
 static const int poison_pill = 1;
 static void* fixt_task_routine(void*);
 
-struct fixt_task* fixt_task_new(int c, int p, int d, void* (*rt)(void*))
+struct fixt_task* fixt_task_new(int c, int p, int d)
 {
 	struct fixt_task task = malloc(sizeof *task);
 	task->tk_c = c;
 	task->tk_p = p;
 	task->tk_d = d;
 	task->tk_r = 0;
-	task->tk_routine = rt;
+	task->tk_routine = &fixt_task_routine;
 }
 
 sem_t fixt_task_run(struct fixt_task* task)
@@ -26,7 +26,7 @@ sem_t fixt_task_run(struct fixt_task* task)
 	fcntl(task->tk_poison_pipe[1], F_SETFL, O_NONBLOCK);
 
 	pthread_t* t = malloc(sizeof *t);
-	pthread_create(t, NULL, task.tk_routine, NULL);
+	pthread_create(t, NULL, task.tk_routine, (void*) task);
 	task->tk_thread = t;
 
 	sem_t* cont = malloc(sizeof *cont);
@@ -59,14 +59,20 @@ void* fixt_task_routine(void* arg)
 {
 	struct fixt_task* task = (struct fixt_task*) arg;
 	int pill = 0;
-	do
+	while (true)
 	{
 		sem_wait(&task->tk_sem_continue);
-		/* spin_for(task->tk_c) */
-		sem_post(&task->tk_sem_continue);
-
 		read(task->tk_poison_pipe[0], &pill, sizeof(poison_pill));
-	} while (pill != poison_pill);
+		if (pill == poison_pill)
+			break;
+
+		/* spin_for(task->tk_c) */
+
+		sem_post(&task->tk_sem_continue);
+		read(task->tk_poison_pipe[0], &pill, sizeof(poison_pill));
+		if (pill == poison_pill)
+			break;
+	}
 }
 
 int fixt_task_get_c(struct fixt_task* task)
