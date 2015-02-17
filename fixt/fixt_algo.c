@@ -35,6 +35,11 @@ void fixt_algo_add_task(struct fixt_algo* algo, struct fixt_task* task)
 	DL_APPEND(algo->al_tasks_head, task);
 }
 
+void fixt_algo_add_all(struct fixt_algo* algo, struct fixt_task* task)
+{
+	DL_CONCAT(algo->al_tasks_head, task);
+}
+
 void fixt_algo_init(struct fixt_algo* algo)
 {
 	pthread_t self = pthread_self();
@@ -73,4 +78,13 @@ void fixt_algo_run(struct fixt_algo* algo)
 	sem_t sem_cont = fixt_task_get_sem_cont(algo->al_tasks_head);
 	sem_post(&sem_cont);
 	algo->al_block(algo);
+}
+
+void fixt_algo_halt(struct fixt_algo* algo)
+{
+	struct fixt_task* elt;
+	DL_FOREACH(algo->al_tasks_head, elt)
+	{
+		fixt_task_stop(elt);
+	}
 }
