@@ -29,7 +29,8 @@ void fixt_task_del(struct fixt_task*);
 sem_t fixt_task_run(struct fixt_task*, int policy);
 void fixt_task_stop(struct fixt_task*);
 
-void fixt_task_set_prio(struct fixt_task*);
+void fixt_task_set_prio(struct fixt_task*, int prio);
+void fixt_task_set_param(struct fixt_task*, int param);
 
 int fixt_task_get_c(struct fixt_task*);
 int fixt_task_get_p(struct fixt_task*);
