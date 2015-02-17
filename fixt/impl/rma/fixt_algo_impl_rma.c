@@ -45,10 +45,31 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	DL_SORT(algo->al_queue_head, &rma_comparator);
 }
 
+/**
+ * In RMA, tasks run to completion, and the scheduler does not preempt tasks.
+ * Therefore, we can wait without timeout on the scheduled task.
+ */
 void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 {
 	sem_t sem_wait = fixt_task_get_sem_wait(algo->al_tasks_head);
 	sem_wait(&sem_wait);
+
+	/* Recalculate r parameter */
+	struct fixt_task* head = algo->al_queue_head;
+	int head_c = head.tk_c;
+
+	/* Task chosen to run for head_c quanta: ri' = di - c0 + ri */
+	head.tk_r = head.tk_d - head_c + head.tk_r;
+
+	/* Tasks chosen to idle for head_c quanta: ri' = ri - c0 */
+	struct fixt_task* elt;
+	if (head.next)
+	{
+		DL_FOREACH(head.next, elt)
+		{
+			elt.tk_r = elt.tk_r - head_c;
+		}
+	}
 
 	/*
 	 * TODO: for a preemptive application:
