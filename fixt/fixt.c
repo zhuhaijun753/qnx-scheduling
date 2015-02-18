@@ -29,6 +29,8 @@ static struct fixt_algo* algo_list = NULL;
 static void register_tasks(); /* User task sets go here */
 static void register_algos(); /* User pulls in algorithms here */
 
+static void calibrate_spin(); /* Calibrates the tests to the processor speed */
+
 static void clean_tasks(); /* Clean up resources */
 static void clean_algos();
 
@@ -48,6 +50,13 @@ void fixt_init()
 {
 	dprintf("fixt_init\n");
 
+	/* TODO: put whole process into a high priority */
+	calibrate_spin();
+	register_tasks();
+	register_algos();
+}
+
+void calibrate_spin() {
 	dprintf("Calibrating to the host processor...\n");
 	spin_calibrate();
 
@@ -62,11 +71,6 @@ void fixt_init()
 	timing_timespec_sub(&t_elap, &t_post, &t_init);
 	printf("Actual: %ldms\n", t_elap.tv_nsec/1000000);
 	printf("Calibration successful!\n");
-
-	/* TODO: put whole process into a high priority */
-
-	register_tasks();
-	register_algos();
 }
 
 void fixt_test()
