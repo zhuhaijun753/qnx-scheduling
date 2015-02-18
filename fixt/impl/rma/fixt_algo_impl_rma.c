@@ -8,8 +8,12 @@
 #include "fixt/fixt_task.h"
 #include "fixt_algo_impl_rma.h"
 
-#define POLICY_RMA SCHED_FIFO
+#define POLICY_RMA SCHED_FIFO /* No preemption under RMA */
 
+/*
+ * This comparator compares two tasks under RMA and generates an ordering
+ * such that tasks with small periods have high priority.
+ */
 static int rma_comparator(void*, void*);
 
 /**
@@ -91,6 +95,9 @@ static int rma_comparator(void* l, void* r)
 {
 	struct fixt_task* task_l = (struct fixt_task*) l;
 	struct fixt_task* task_r = (struct fixt_task*) r;
-
+	/*
+	 * If the left task has a smaller period than the right task, then the
+	 * function will return a negative number, etc.
+	 */
 	return task_l->tk_p - task_r->tk_p;
 }

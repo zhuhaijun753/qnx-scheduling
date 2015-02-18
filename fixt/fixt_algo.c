@@ -1,3 +1,10 @@
+/*
+ * File: fixt_algo.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: State and logic common to all scheduling algorithms
+ */
+
 #include <semaphore.h>
 #include "utlist.h"
 #include "fixt_task.h"
@@ -35,18 +42,21 @@ void fixt_algo_add_task(struct fixt_algo* algo, struct fixt_task* task)
 	DL_APPEND(algo->al_tasks_head, task);
 }
 
-void fixt_algo_add_all(struct fixt_algo* algo, struct fixt_task* task)
+void fixt_algo_copy_all(struct fixt_algo* algo, struct fixt_task* task)
 {
 	DL_CONCAT(algo->al_tasks_head, task);
 }
 
 void fixt_algo_init(struct fixt_algo* algo)
 {
+	/* Change the main fixture thread's priority to the user max! */
 	pthread_t self = pthread_self();
 	pthread_setschedprio(self, FIXT_ALGO_BASE_PRIO);
 
+	/* Change the main fixture thread's policy to fit the algo */
 	algo->al_init(algo);
 
+	/* Start up all component threads with the right policy choice */
 	struct fixt_task* elt;
 	DL_FOREACH(algo->al_tasks_head, elt)
 	{
@@ -56,16 +66,18 @@ void fixt_algo_init(struct fixt_algo* algo)
 
 void fixt_algo_schedule(struct fixt_algo* algo)
 {
+	/* Defer scheduling to implementation */
 	algo->al_schedule(algo);
 }
 
 void fixt_algo_run(struct fixt_algo* algo)
 {
+	/* Reprioritize all threads according to the queue ordering */
 	struct fixt_task* elt;
 	int prio = FIXT_ALGO_BASE_PRIO;
 	DL_FOREACH(algo->al_queue_head, elt)
 	{
-		fixt_task_set_prio(elt, --prio);
+		fixt_task_set_prio(elt, --prio); /* In descending order */
 	}
 
 	/*

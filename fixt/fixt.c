@@ -137,7 +137,7 @@ static void clean_algos()
 static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 {
 	/* Copy the task set over to the algorithms internal data */
-	fixt_algo_add_all(algo, set->ts_set_head);
+	fixt_algo_copy_all(algo, set->ts_set_head);
 	fixt_algo_init(algo);
 }
 

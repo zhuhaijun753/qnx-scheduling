@@ -1,3 +1,10 @@
+/*
+ * File: fixt_set.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: A collection of tasks to run as a unit
+ */
+
 #include <stdarg.h>
 #include <assert.h>
 #include "utlist.h"
@@ -17,7 +24,7 @@ struct fixt_set* fixt_set_new(int id, int size, ...)
 	struct fixt_task* task;
 
 	va_start(tuples, size);
-	for (tuple = 0; tuple < size; tuple += 3)
+	for (tuple = 0; tuple < size; tuple += 3) /* Advance index by 3 */
 	{
 		int c = va_arg(tuples, int);
 		int p = va_arg(tuples, int);
