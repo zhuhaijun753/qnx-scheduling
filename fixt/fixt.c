@@ -49,7 +49,7 @@ void fixt_init()
 	dprintf("fixt_init\n");
 
 	dprintf("Calibrating to the host processor...\n");
-	spin_calibrate();
+	//spin_calibrate();
 	dprintf("Calibration successful!\n");
 	//spin_for(1);
 

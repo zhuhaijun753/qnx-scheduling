@@ -102,7 +102,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	 * logic. The different al_run implementations generally support preemptive
 	 * or non-preemptive configurations.
 	 */
-	sem_t* sem_cont = fixt_task_get_sem_cont(algo->al_tasks_head);
+	sem_t* sem_cont = fixt_task_get_sem_cont(algo->al_queue_head);
 	sem_post(sem_cont);
 	algo->al_block(algo);
 

@@ -8,6 +8,8 @@
 #include "fixt/fixt_task.h"
 #include "fixt_algo_impl_rma.h"
 
+#include "debug.h"
+
 #define POLICY_RMA SCHED_FIFO /* No preemption under RMA */
 
 /*
@@ -31,6 +33,8 @@ void fixt_algo_impl_rma_init(struct fixt_algo* algo)
 
 void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 {
+	dprintf("......_rma_schedule()\n");
+
 	/* Reset the queue so we can reschedule the tasks */
 	algo->al_queue_head = NULL;
 
@@ -40,12 +44,16 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	{
 		if (fixt_task_get_r(elt) <= 0)
 		{
+			dprintf("........ rchk (%d, %d, %d): %d\n", elt->tk_c, elt->tk_p,
+					elt->tk_d, elt->tk_r);
 			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
 		}
 	}
 
 	/* Pull the task with the shortest period to the head of the queue */
 	DL_SORT2(algo->al_queue_head, (&rma_comparator), _aq_prev, _aq_next);
+
+	dprintf("......_rma_schedule() end\n");
 }
 
 /**
@@ -54,25 +62,36 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
  */
 void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 {
-	sem_t* sem_task_wait = fixt_task_get_sem_cont(algo->al_queue_head);
-	sem_wait(sem_task_wait);
+	dprintf("......_rma_block()\n");
+
+	sem_t* sem_done = fixt_task_get_sem_done(algo->al_queue_head);
+	sem_wait(sem_done);
 
 	/* Recalculate r parameter */
 	struct fixt_task* head = algo->al_queue_head;
 	int head_c = head->tk_c;
 
-	/* Task chosen to run for head_c quanta: ri' = di - c0 + ri */
+	dprintf("........ head (%d, %d, %d) -> ", head->tk_c, head->tk_p, head->tk_r);
+	/* Queue head chosen to run for head_c quanta: ri' = di - c0 + ri */
 	head->tk_r = head->tk_d - head_c + head->tk_r;
+	dprintf("(%d, %d, %d)\n", head->tk_c, head->tk_p, head->tk_r);
 
 	/* Tasks chosen to idle for head_c quanta: ri' = ri - c0 */
 	struct fixt_task* elt;
-	if (head->_at_next)
+	DL_FOREACH2(algo->al_tasks_head, elt, _at_next)
 	{
-		DL_FOREACH2(head->_at_next, elt, _at_next)
-		{
+		if (elt != head)
+		{ /* Don't do this calculation on the queue head! */
+			dprintf("........ idle (%d, %d, %d) -> ", elt->tk_c, elt->tk_p,
+					elt->tk_r);
+
 			elt->tk_r = elt->tk_r - head_c;
+
+			dprintf("(%d, %d, %d)\n", elt->tk_c, elt->tk_p, elt->tk_r);
 		}
 	}
+
+	dprintf("......_rma_block() end\n");
 
 	/*
 	 * TODO: for a preemptive application:
