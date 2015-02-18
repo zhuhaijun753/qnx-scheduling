@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include "fixt_hook.h"
 
-#define FIXT_ALGO_BASE_PRIO 32 /* TODO determine max user prio */
+#define FIXT_ALGO_BASE_PRIO 63 /* TODO determine max user prio */
 
 struct fixt_task;
 
