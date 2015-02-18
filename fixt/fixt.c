@@ -60,7 +60,7 @@ void fixt_init()
 	clock_gettime(CLOCK_REALTIME, &t_post);
 
 	timing_timespec_sub(&t_elap, &t_post, &t_init);
-	printf("result: %ld\n", t_elap.tv_nsec);
+	printf("Actual: %ldms\n", t_elap.tv_nsec/1000000);
 	printf("Calibration successful!\n");
 
 	/* TODO: put whole process into a high priority */
