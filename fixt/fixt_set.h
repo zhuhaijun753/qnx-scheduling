@@ -2,7 +2,7 @@
 #define FIXT_SET_H_
 
 #include <stdarg.h>
-#include "../utlist.h"
+#include "utlist.h"
 #include "fixt_task.h"
 
 struct fixt_set

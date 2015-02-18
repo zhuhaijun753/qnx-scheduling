@@ -1,10 +1,10 @@
 #include <semaphore.h>
-#include "../utlist.h"
+#include "utlist.h"
 #include "fixt_task.h"
 #include "fixt_hook.h"
 #include "fixt_algo.h"
 
-struct fixt_algo* fixt_algo_new(AlgoHook i, Algohook s, AlgoHook b, int policy)
+struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook b, int policy)
 {
 	struct fixt_algo* algo = malloc(sizeof(*algo));
 	algo->al_init = i;
@@ -65,7 +65,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	int prio = FIXT_ALGO_BASE_PRIO;
 	DL_FOREACH(algo->al_queue_head, elt)
 	{
-		fixt_task_set_prio(--prio);
+		fixt_task_set_prio(elt, --prio);
 	}
 
 	/*

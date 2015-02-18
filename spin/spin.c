@@ -13,7 +13,8 @@ void spin_for(int quanta)
 	usleep(quanta * SPIN_QUANTUM_WIDTH_MS * 1000);
 }
 
-struct timespec spin_abstime_in_quanta(int quanta)
+struct timespec* spin_abstime_in_quanta(int quanta)
 {
 	/* TODO: Implement solution */
+	return NULL;
 }

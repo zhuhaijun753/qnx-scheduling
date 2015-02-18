@@ -1,12 +1,11 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
-
-#include "../../utlist.h"
-#include "../../spin/spin.h"
-#include "../fixt_hook.h"
-#include "../fixt_algo.h"
-#include "../fixt_task.h"
+#include "utlist.h"
+#include "spin/spin.h"
+#include "fixt/fixt_hook.h"
+#include "fixt/fixt_algo.h"
+#include "fixt/fixt_task.h"
 #include "fixt_algo_impl_rma.h"
 
 #define POLICY_RMA SCHED_FIFO
@@ -42,7 +41,7 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	}
 
 	/* Pull the task with the shortest period to the head of the queue */
-	DL_SORT(algo->al_queue_head, &rma_comparator);
+	DL_SORT(algo->al_queue_head, (&rma_comparator));
 }
 
 /**
@@ -51,23 +50,23 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
  */
 void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 {
-	sem_t sem_wait = fixt_task_get_sem_wait(algo->al_tasks_head);
-	sem_wait(&sem_wait);
+	sem_t sem_task_wait = fixt_task_get_sem_cont(algo->al_queue_head);
+	sem_wait(&sem_task_wait);
 
 	/* Recalculate r parameter */
 	struct fixt_task* head = algo->al_queue_head;
-	int head_c = head.tk_c;
+	int head_c = head->tk_c;
 
 	/* Task chosen to run for head_c quanta: ri' = di - c0 + ri */
-	head.tk_r = head.tk_d - head_c + head.tk_r;
+	head->tk_r = head->tk_d - head_c + head->tk_r;
 
 	/* Tasks chosen to idle for head_c quanta: ri' = ri - c0 */
 	struct fixt_task* elt;
-	if (head.next)
+	if (head->next)
 	{
-		DL_FOREACH(head.next, elt)
+		DL_FOREACH(head->next, elt)
 		{
-			elt.tk_r = elt.tk_r - head_c;
+			elt->tk_r = elt->tk_r - head_c;
 		}
 	}
 
@@ -81,9 +80,9 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 
 struct fixt_algo* fixt_algo_impl_rma_new()
 {
-	AlgoHook al_init = &fixt_algo_impl_rma_init();
-	AlgoHook al_schedule = &fixt_algo_impl_rma_schedule();
-	AlgoHook al_block = &fixt_algo_impl_rma_block();
+	AlgoHook al_init = &fixt_algo_impl_rma_init;
+	AlgoHook al_schedule = &fixt_algo_impl_rma_schedule;
+	AlgoHook al_block = &fixt_algo_impl_rma_block;
 
 	return fixt_algo_new(al_init, al_schedule, al_block, POLICY_RMA);
 }

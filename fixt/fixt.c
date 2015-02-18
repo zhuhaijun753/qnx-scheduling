@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <signal.h>
-#include "../utlist.h"
+#include "utlist.h"
+#include "fixt/impl/rma/fixt_algo_impl_rma.h"
 #include "fixt_set.h"
 #include "fixt_algo.h"
 #include "fixt_task.h"
@@ -83,6 +84,7 @@ static void clean_tasks()
 static void register_algos()
 {
 	/* Sched algorithm #1 - RMA */
+	/* TODO: Figure this out */
 	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
 }
 

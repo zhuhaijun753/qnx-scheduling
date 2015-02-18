@@ -13,6 +13,10 @@ USEFILE=
 #===== LIBS - a space-separated list of library items to be included in the link.
 LIBS+=c socket
 
+#===== EXTRA_SRCVPATH - a space-separated list of directories to search for source files.
+EXTRA_SRCVPATH+=$(PROJECT_ROOT)/fixt $(PROJECT_ROOT)/spin  \
+	$(PROJECT_ROOT)/fixt/impl/rma
+
 include $(MKFILES_ROOT)/qmacros.mk
 ifndef QNX_INTERNAL
 QNX_INTERNAL=$(PROJECT_ROOT)/.qnx_internal.mk

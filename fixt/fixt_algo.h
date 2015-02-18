@@ -6,7 +6,7 @@
 
 #define FIXT_ALGO_BASE_PRIO 32 /* TODO determine max user prio */
 
-extern struct fixt_task;
+struct fixt_task;
 
 struct fixt_algo
 {
@@ -24,11 +24,11 @@ struct fixt_algo
 	struct fixt_algo* next;
 };
 
-struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook r);
+struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook r, int policy);
 void fixt_algo_del(struct fixt_algo*);
 
-void fixt_algo_add_task(fixt_task*);
-void fixt_algo_add_all(fixt_task*);
+void fixt_algo_add_task(struct fixt_algo*, struct fixt_task*);
+void fixt_algo_add_all(struct fixt_algo*, struct fixt_task*);
 
 void fixt_algo_init(struct fixt_algo*);
 void fixt_algo_schedule(struct fixt_algo*);

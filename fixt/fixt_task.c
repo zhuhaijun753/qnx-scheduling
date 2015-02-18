@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
-#include "../spin/spin.h"
+#include "spin/spin.h"
 #include "fixt_task.h"
 
 static const int POISON_PILL = 1;
@@ -12,7 +12,7 @@ static void* fixt_task_routine(void*);
 
 struct fixt_task* fixt_task_new(int c, int p, int d)
 {
-	struct fixt_task task = malloc(sizeof *task);
+	struct fixt_task* task = malloc(sizeof *task);
 	task->tk_c = c;
 	task->tk_p = p;
 	task->tk_d = d;
@@ -21,6 +21,8 @@ struct fixt_task* fixt_task_new(int c, int p, int d)
 
 	task->prev = NULL;
 	task->next = NULL;
+
+	return task;
 }
 
 sem_t fixt_task_run(struct fixt_task* task, int policy)
@@ -34,15 +36,15 @@ sem_t fixt_task_run(struct fixt_task* task, int policy)
 	task->tk_sem_cont = cont;
 
 	sem_t done;
-	sem_init(&done, 0fixt_task_set_param, 0);
+	sem_init(&done, 0, 0);
 	task->tk_sem_done = done;
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	pthread_attr_setschedpolicy(policy);
+	pthread_attr_setschedpolicy(&attr, policy);
 
-	pthread_t* t = malloc(sizeof *t);
-	pthread_create(t, &attr, task.tk_routine, (void*) task);
+	pthread_t t;
+	pthread_create(&t, &attr, task->tk_routine, (void*) task);
 	task->tk_thread = t;
 
 	return cont;
@@ -65,9 +67,8 @@ void fixt_task_stop(struct fixt_task* task)
 	close(task->tk_poison_pipe[0]);
 	close(task->tk_poison_pipe[1]);
 
-	sem_destroy(task->tk_sem_cont);
-	sem_destroy(task->tk_sem_done);
-	free(task->tk_thread);
+	sem_destroy(&task->tk_sem_cont);
+	sem_destroy(&task->tk_sem_done);
 }
 
 static void* fixt_task_routine(void* arg)
@@ -93,6 +94,8 @@ static void* fixt_task_routine(void* arg)
 		if (pill == POISON_PILL)
 			break;
 	}
+
+	return NULL;
 }
 
 void fixt_task_set_prio(struct fixt_task* task, int prio)

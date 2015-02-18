@@ -8,6 +8,6 @@
 void spin_calibrate();
 void spin_for(int quanta);
 
-struct timespec spin_abstime_in_quanta(int quanta);
+struct timespec* spin_abstime_in_quanta(int quanta);
 
 #endif

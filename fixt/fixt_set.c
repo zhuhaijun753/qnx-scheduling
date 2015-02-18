@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include <assert.h>
-#include "../utlist.h"
+#include "utlist.h"
 #include "fixt_task.h"
 #include "fixt_set.h"
 
