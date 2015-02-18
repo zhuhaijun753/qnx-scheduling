@@ -115,19 +115,10 @@ void spin_calibrate()
 
 void spin_for(int quanta)
 {
-	//struct timespec t_init, t_post, t_elap;
-
-	//printf("Target ms: %d\n", quanta*10);
-
 	int i,x=0;
-	//clock_gettime(CLOCK_REALTIME, &t_init);
 	for (i = 0; i < quanta*FUDGE_FACTOR; i++) {
 		x = x + 1;
 	}
-	//clock_gettime(CLOCK_REALTIME, &t_post);
-
-	//timing_timespec_sub(&t_elap, &t_post, &t_init);
-	//printf("result: %ld\n", t_elap.tv_nsec);
 }
 
 struct timespec* spin_abstime_in_quanta(int quanta)
