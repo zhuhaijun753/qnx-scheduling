@@ -36,16 +36,16 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 
 	/* Only consider tasks that are ready (r <= 0) */
 	struct fixt_task *elt;
-	DL_FOREACH(algo->al_tasks_head, elt)
+	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next)
 	{
 		if (fixt_task_get_r(elt) <= 0)
 		{
-			DL_APPEND(algo->al_queue_head, elt);
+			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
 		}
 	}
 
 	/* Pull the task with the shortest period to the head of the queue */
-	DL_SORT(algo->al_queue_head, (&rma_comparator));
+	DL_SORT2(algo->al_queue_head, (&rma_comparator), _aq_prev, _aq_next);
 }
 
 /**
@@ -54,8 +54,8 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
  */
 void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 {
-	sem_t sem_task_wait = fixt_task_get_sem_cont(algo->al_queue_head);
-	sem_wait(&sem_task_wait);
+	sem_t* sem_task_wait = fixt_task_get_sem_cont(algo->al_queue_head);
+	sem_wait(sem_task_wait);
 
 	/* Recalculate r parameter */
 	struct fixt_task* head = algo->al_queue_head;
@@ -66,9 +66,9 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 
 	/* Tasks chosen to idle for head_c quanta: ri' = ri - c0 */
 	struct fixt_task* elt;
-	if (head->next)
+	if (head->_at_next)
 	{
-		DL_FOREACH(head->next, elt)
+		DL_FOREACH2(head->_at_next, elt, _at_next)
 		{
 			elt->tk_r = elt->tk_r - head_c;
 		}

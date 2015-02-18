@@ -31,7 +31,7 @@ struct fixt_set* fixt_set_new(int id, int size, ...)
 		int d = va_arg(tuples, int);
 
 		task = fixt_task_new(c, p, d);
-		DL_APPEND(set->ts_set_head, task);
+		DL_APPEND2(set->ts_set_head, task, _ts_prev, _ts_next);
 	}
 	va_end(tuples);
 
@@ -41,9 +41,9 @@ struct fixt_set* fixt_set_new(int id, int size, ...)
 void fixt_set_del(struct fixt_set* set)
 {
 	struct fixt_task *elt, *tmp;
-	DL_FOREACH_SAFE(set->ts_set_head, elt, tmp)
+	DL_FOREACH_SAFE2(set->ts_set_head, elt, tmp, _ts_next)
 	{
-		DL_DELETE(set->ts_set_head, elt);
+		DL_DELETE2(set->ts_set_head, elt, _ts_prev, _ts_next);
 		fixt_task_del(elt);
 	}
 	free(set);

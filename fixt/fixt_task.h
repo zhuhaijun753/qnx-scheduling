@@ -26,12 +26,13 @@ struct fixt_task
 	int tk_poison_pipe[2]; /* Pipe to inform the thread when to stop */
 	pthread_t tk_thread;
 
-	sem_t tk_sem_cont; /* Scheduler releases task via posting this */
-	sem_t tk_sem_done; /* Task completes execution by posting this */
+	sem_t* tk_sem_cont; /* Scheduler releases task via posting this */
+	sem_t* tk_sem_done; /* Task completes execution by posting this */
 
-	/* For private use by utlist.h */
-	struct fixt_task *prev;
-	struct fixt_task *next;
+	/* private use by utlist.h - OOPS our lists were clobbering each other */
+	struct fixt_task *_ts_prev, *_ts_next; /* Task set list */
+	struct fixt_task *_at_prev, *_at_next; /* Algo task list */
+	struct fixt_task *_aq_prev, *_aq_next; /* Algo queue list */
 };
 
 /*
@@ -44,7 +45,7 @@ void fixt_task_del(struct fixt_task*);
 /*
  * Start up the backing routine in a new thread and initialize semaphores
  */
-sem_t fixt_task_run(struct fixt_task*, int policy);
+sem_t* fixt_task_run(struct fixt_task*, int policy, int prio);
 
 /*
  * Send a poison pill to the task, then join on that task. Also reset
@@ -70,11 +71,11 @@ int fixt_task_get_r(struct fixt_task*);
 /*
  * Scheduler posts sem_cont to release the task for execution.
  */
-sem_t fixt_task_get_sem_cont(struct fixt_task*);
+sem_t* fixt_task_get_sem_cont(struct fixt_task*);
 
 /*
  * Task posts sem_done to unblock the scheduler
  */
-sem_t fixt_task_get_sem_done(struct fixt_task*);
+sem_t* fixt_task_get_sem_done(struct fixt_task*);
 
 #endif

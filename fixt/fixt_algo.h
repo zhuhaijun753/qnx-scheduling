@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include "fixt_hook.h"
 
-#define FIXT_ALGO_BASE_PRIO 32 /* TODO determine max user prio */
+#define FIXT_ALGO_BASE_PRIO 63
 
 struct fixt_task;
 
@@ -43,8 +43,10 @@ void fixt_algo_del(struct fixt_algo*);
  */
 void fixt_algo_add_task(struct fixt_algo*, struct fixt_task*);
 
-/*
- * Copy a list of tasks into the the algorithm's accounting.
+/**
+ * BAD - DO NOT USE!
+ * Concat is only meant to concatenate two disjoint lists within the
+ * same "list namespace"
  */
 void fixt_algo_copy_all(struct fixt_algo*, struct fixt_task*);
 
