@@ -11,6 +11,8 @@
 #include "fixt_hook.h"
 #include "fixt_algo.h"
 
+#include "debug.h"
+
 struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook b, int policy)
 {
 	struct fixt_algo* algo = malloc(sizeof(*algo));
@@ -49,6 +51,8 @@ void fixt_algo_copy_all(struct fixt_algo* algo, struct fixt_task* task)
 
 void fixt_algo_init(struct fixt_algo* algo)
 {
+	dprintf("....fixt_algo_init\n");
+
 	/* Change the main fixture thread's priority to the user max! */
 	pthread_t self = pthread_self();
 	pthread_setschedprio(self, FIXT_ALGO_BASE_PRIO);
@@ -62,6 +66,8 @@ void fixt_algo_init(struct fixt_algo* algo)
 	{
 		fixt_task_run(elt, algo->al_preferred_policy);
 	}
+
+	dprintf("....fixt_algo_init (end)\n");
 }
 
 void fixt_algo_schedule(struct fixt_algo* algo)

@@ -14,6 +14,8 @@
 #include "fixt_task.h"
 #include "fixt.h"
 
+#include "debug.h"
+
 /*
  * A global doubly linked list (DL*) of task sets.
  */
@@ -44,6 +46,7 @@ static void run_test_on(struct fixt_algo*);
 
 void fixt_init()
 {
+	dprintf("fixt_init\n");
 	/* TODO: put whole process into a high priority */
 
 	register_tasks();
@@ -52,6 +55,8 @@ void fixt_init()
 
 void fixt_test()
 {
+	dprintf("fixt_test\n");
+
 	/* Run each combination of algorithm and task set */
 	struct fixt_algo* algo;
 	DL_FOREACH(algo_list, algo)
@@ -67,6 +72,8 @@ void fixt_test()
 
 void fixt_term()
 {
+	dprintf("fixt_term\n");
+
 	clean_tasks();
 	clean_algos();
 }
@@ -136,6 +143,8 @@ static void clean_algos()
 
 static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 {
+	dprintf("..prime_algo\n");
+
 	/* Copy the task set over to the algorithms internal data */
 	fixt_algo_copy_all(algo, set->ts_set_head);
 	fixt_algo_init(algo);
