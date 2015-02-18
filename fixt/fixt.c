@@ -50,8 +50,18 @@ void fixt_init()
 
 	dprintf("Calibrating to the host processor...\n");
 	spin_calibrate();
-	dprintf("Calibration successful!\n");
-	//spin_for(1);
+
+	// Verify calibration
+	struct timespec t_init, t_post, t_elap;
+	printf("Target 10ms\n");
+
+	clock_gettime(CLOCK_REALTIME, &t_init);
+	spin_for(1);
+	clock_gettime(CLOCK_REALTIME, &t_post);
+
+	timing_timespec_sub(&t_elap, &t_post, &t_init);
+	printf("result: %ld\n", t_elap.tv_nsec);
+	printf("Calibration successful!\n");
 
 	/* TODO: put whole process into a high priority */
 
