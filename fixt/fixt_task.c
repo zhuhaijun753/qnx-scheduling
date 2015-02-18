@@ -1,3 +1,10 @@
+/*
+ * File: fixt_task.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: Tasking structure containing bookeeping logic and state
+ */
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -7,7 +14,15 @@
 #include "spin/spin.h"
 #include "fixt_task.h"
 
+/*
+ * Value sent over the poison pill pipe indicating a thread should end
+ * as soon as possible
+ */
 static const int POISON_PILL = 1;
+
+/*
+ * The routine which is run as the task in a new thread
+ */
 static void* fixt_task_routine(void*);
 
 struct fixt_task* fixt_task_new(int c, int p, int d)
@@ -28,17 +43,22 @@ struct fixt_task* fixt_task_new(int c, int p, int d)
 sem_t fixt_task_run(struct fixt_task* task, int policy)
 {
 	pipe(task->tk_poison_pipe);
+	/* Set to nonblocking. A thread join is used to sync threads instead */
 	fcntl(task->tk_poison_pipe[0], F_SETFL, O_NONBLOCK);
 	fcntl(task->tk_poison_pipe[1], F_SETFL, O_NONBLOCK);
 
 	sem_t cont;
-	sem_init(&cont, 0, 0);
+	sem_init(&cont, 0, 0); /* First sem_wait blocks */
 	task->tk_sem_cont = cont;
 
 	sem_t done;
-	sem_init(&done, 0, 0);
+	sem_init(&done, 0, 0); /* First sem_wait blocks */
 	task->tk_sem_done = done;
 
+	/*
+	 * The thread should have the appropriate scheduling policy when it
+	 * starts. Thread priority is managed by the scheduler
+	 */
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setschedpolicy(&attr, policy);
@@ -59,7 +79,8 @@ void fixt_task_stop(struct fixt_task* task)
 {
 	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
 
-	// Force thfixt_task_set_paramread to check for a poison pill (pthread_kill better than post)
+	// Force task to check for a poison pill (pthread_kill better than post)
+	// TODO: integrate with spin_for()'s actual solution.
 	pthread_kill(task->tk_thread, SIGALRM);
 	// sem_post(task->tk_sem_continue);
 

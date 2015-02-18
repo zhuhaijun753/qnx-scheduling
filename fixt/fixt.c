@@ -1,3 +1,10 @@
+/*
+ * File: fixt.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: High-level global interface to the scheduling test fixture
+ */
+
 #include <stdbool.h>
 #include <signal.h>
 #include "utlist.h"
@@ -7,26 +14,45 @@
 #include "fixt_task.h"
 #include "fixt.h"
 
+/*
+ * A global doubly linked list (DL*) of task sets.
+ */
 static struct fixt_set* set_list = NULL;
+
+/**
+ * A global doubly linked list (DL*) of scheduling algorithms
+ */
 static struct fixt_algo* algo_list = NULL;
 
-static void register_tasks();
-static void register_algos();
+static void register_tasks(); /* User task sets go here */
+static void register_algos(); /* User pulls in algorithms here */
 
-static void clean_tasks();
+static void clean_tasks(); /* Clean up resources */
 static void clean_algos();
 
+/*
+ * Prime an algorithm with a particular task set. This will start up each
+ * task thread and initialize relevant algorithm data.
+ */
 static void prime_algo(struct fixt_algo*, struct fixt_set*);
+
+/*
+ * Run a test on the primed task set for a limited run. The run is
+ * limited by FIXT_SECONDS_PER_TEST. Otherwise, algo simulations are infinite.
+ */
 static void run_test_on(struct fixt_algo*);
 
 void fixt_init()
 {
+	/* TODO: put whole process into a high priority */
+
 	register_tasks();
 	register_algos();
 }
 
 void fixt_test()
 {
+	/* Run each combination of algorithm and task set */
 	struct fixt_algo* algo;
 	DL_FOREACH(algo_list, algo)
 	{
@@ -45,9 +71,13 @@ void fixt_term()
 	clean_algos();
 }
 
-//@formatter:off
+/*
+ * User: place task set definitions here
+ */
 static void register_tasks()
 {
+	//@formatter:off
+
 	/* Task set #1 */
 	DL_APPEND(set_list, fixt_set_new(1, 5,
 					1, 7, 7,
@@ -68,8 +98,9 @@ static void register_tasks()
 					2, 5, 5,
 					1, 8, 8,
 					1, 10, 10));
+
+	//@formatter:on
 }
-//@formatter:on
 
 static void clean_tasks()
 {
@@ -81,6 +112,11 @@ static void clean_tasks()
 	}
 }
 
+/*
+ * User: register the algorithms you want to use here. You do this by
+ * using a method of the form fixt_algo_impl_{name}_new(). You can find
+ * this methods in fixt/impl
+ */
 static void register_algos()
 {
 	/* Sched algorithm #1 - RMA */
@@ -100,10 +136,14 @@ static void clean_algos()
 
 static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 {
+	/* Copy the task set over to the algorithms internal data */
 	fixt_algo_add_all(algo, set->ts_set_head);
 	fixt_algo_init(algo);
 }
 
+/*
+ * When true, the test runner should stop testing the current configuration
+ */
 static volatile sig_atomic_t move_on;
 static void move_on_handler()
 {
@@ -116,8 +156,12 @@ static void run_test_on(struct fixt_algo* algo)
 	struct sigaction act;
 	act.sa_handler = &move_on_handler;
 	sigaction(SIGALRM, &act, NULL);
-
-	alarm(FIXT_SECONDS_PER_TEST);
+	/*
+	 * Before the alarm, alternate between scheduling tasks and running them.
+	 * This could go on forever, but we only need a limited stream of data
+	 * for analysis. The halt method will kill all task threads.
+	 */
+	alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
 	while (!move_on)
 	{
 		fixt_algo_schedule(algo);

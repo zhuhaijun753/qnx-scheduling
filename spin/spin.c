@@ -1,3 +1,10 @@
+/*
+ * File: spin.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: CPU-time consuming functionality + timespec manipulation
+ */
+
 #include <unistd.h>
 #include <time.h>
 #include "spin.h"
