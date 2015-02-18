@@ -76,7 +76,7 @@ void fixt_term()
  */
 static void register_tasks()
 {
-	//@formatter:off
+	/* @formatter:off */
 
 	/* Task set #1 */
 	DL_APPEND(set_list, fixt_set_new(1, 5,
@@ -99,7 +99,7 @@ static void register_tasks()
 					1, 8, 8,
 					1, 10, 10));
 
-	//@formatter:on
+	/* @formatter:on */
 }
 
 static void clean_tasks()

@@ -32,7 +32,7 @@ void fixt_algo_del(struct fixt_algo* algo)
 	DL_FOREACH_SAFE(algo->al_tasks_head, elt, tmp)
 	{
 		DL_DELETE(algo->al_tasks_head, elt);
-		// fixt should manage task lifetimes
+		/* fixt should manage task lifetimes */
 	}
 	free(algo);
 }

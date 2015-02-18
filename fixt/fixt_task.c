@@ -79,10 +79,10 @@ void fixt_task_stop(struct fixt_task* task)
 {
 	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
 
-	// Force task to check for a poison pill (pthread_kill better than post)
-	// TODO: integrate with spin_for()'s actual solution.
+	/* Force task to check for a poison pill (pthread_kill better than post) */
+	/* TODO: integrate with spin_for()'s actual solution. */
 	pthread_kill(task->tk_thread, SIGALRM);
-	// sem_post(task->tk_sem_continue);
+	/* sem_post(task->tk_sem_continue); */
 
 	pthread_join(task->tk_thread, NULL);
 	close(task->tk_poison_pipe[0]);
@@ -99,18 +99,18 @@ static void* fixt_task_routine(void* arg)
 	int pill;
 	while (true)
 	{
-		// Wait for the scheduler to post
+		/* Wait for the scheduler to post */
 		sem_wait(&task->tk_sem_cont);
-		// If the thread was told to quit while waiting, quit now!
+		/* If the thread was told to quit while waiting, quit now! */
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL)
 			break;
 
 		spin_for(task->tk_c);
 
-		// Notify the scheduler that this task is done executing
+		/* Notify the scheduler that this task is done executing */
 		sem_post(&task->tk_sem_done);
-		// If the thread was told to quit while spinning, quit now!
+		/* If the thread was told to quit while spinning, quit now! */
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL)
 			break;
