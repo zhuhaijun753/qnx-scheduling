@@ -20,6 +20,7 @@ struct fixt_algo
 	AlgoHook al_init; /* Hook run to set the scheduler thread's policy */
 	AlgoHook al_schedule; /* Hook run to organize the queue */
 	AlgoHook al_block; /* Hook which blocks until the scheduler should resume */
+	AlgoHook al_recalc; /* Hooks which updates bookeeping after a run */
 
 	int al_preferred_policy; /* Scheduling policy for all new task threads */
 
@@ -35,7 +36,7 @@ struct fixt_algo
  * Create a new scheduling algorithm given the three implementation-specific
  * hooks and a preferred scheduling policy for all task threads.
  */
-struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook r, int policy);
+struct fixt_algo* fixt_algo_new(AlgoHook, AlgoHook, AlgoHook, AlgoHook, int policy);
 void fixt_algo_del(struct fixt_algo*);
 
 /*
@@ -70,5 +71,10 @@ void fixt_algo_run(struct fixt_algo*);
  * Stop all component threads.
  */
 void fixt_algo_halt(struct fixt_algo*);
+
+/*
+ * Determines the minimum time until the next task becomes ready
+ */
+int min_r(struct fixt_algo*);
 
 #endif

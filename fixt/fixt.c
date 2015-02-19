@@ -13,6 +13,8 @@
 #include "fixt_algo.h"
 #include "fixt_task.h"
 #include "fixt.h"
+#include "spin/spin.h"
+#include "spin/timing.h"
 
 #include "debug.h"
 
@@ -115,18 +117,18 @@ static void register_tasks()
 					1, 10, 10,
 					2, 16, 16));
 
-	/* Task set #2 */
-	DL_APPEND(set_list, fixt_set_new(2, 3*3,
-					1, 3, 3,
-					2, 5, 5,
-					1, 10, 10));
-
-	/* Task set #3 */
-	DL_APPEND(set_list, fixt_set_new(3, 4*3,
-					1, 4, 4,
-					2, 5, 5,
-					1, 8, 8,
-					1, 10, 10));
+//	/* Task set #2 */
+//	DL_APPEND(set_list, fixt_set_new(2, 3*3,
+//					1, 3, 3,
+//					2, 5, 5,
+//					1, 10, 10));
+//
+//	/* Task set #3 */
+//	DL_APPEND(set_list, fixt_set_new(3, 4*3,
+//					1, 4, 4,
+//					2, 5, 5,
+//					1, 8, 8,
+//					1, 10, 10));
 
 	/* @formatter:on */
 }
@@ -182,7 +184,7 @@ static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 static volatile sig_atomic_t move_on;
 static void move_on_handler()
 {
-	dprintf("  [ SIGALRM ]\n");
+	dprintf(" [ SIGALRM ]\n");
 	move_on = true;
 }
 static void run_test_on(struct fixt_algo* algo)
@@ -198,7 +200,7 @@ static void run_test_on(struct fixt_algo* algo)
 	 * This could go on forever, but we only need a limited stream of data
 	 * for analysis. The halt method will kill all task threads.
 	 */
-	//alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
+	alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
 	while (!move_on)
 	{
 		fixt_algo_schedule(algo);

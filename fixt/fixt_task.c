@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <stdbool.h>
 #include "spin/spin.h"
 #include "fixt_task.h"
@@ -101,7 +102,7 @@ void fixt_task_stop(struct fixt_task* task)
 
 	/* Force task to check for a poison pill (pthread_kill better than post) */
 	/* TODO: integrate with spin_for()'s actual solution. */
-	pthread_kill(task->tk_thread, SIGALRM);
+	pthread_kill(task->tk_thread, SIGSTOP);
 	/* sem_post(task->tk_sem_continue); */
 
 	pthread_join(task->tk_thread, NULL);
@@ -115,6 +116,11 @@ void fixt_task_stop(struct fixt_task* task)
 static void* fixt_task_routine(void* arg)
 {
 	struct fixt_task* task = (struct fixt_task*) arg;
+
+	/* Mask out SIGLARM so we don't get the scheduler's alarms */
+	sigset_t mask;
+	sigaddset(&mask, SIGALRM);
+	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
 	int pill;
 	while (true)

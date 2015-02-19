@@ -18,7 +18,7 @@
  */
 static int rma_comparator(void*, void*);
 
-/**
+/*
  * RMA requires the fixture thread (self) to use a FIFO policy.
  *
  * From QNX: a thread selected to run continues executing until it:
@@ -40,10 +40,8 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 
 	/* Only consider tasks that are ready (r <= 0) */
 	struct fixt_task *elt;
-	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next)
-	{
-		if (fixt_task_get_r(elt) <= 0)
-		{
+	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next) {
+		if (fixt_task_get_r(elt) <= 0) {
 			dprintf("........ rchk (%d, %d, %d): %d\n", elt->tk_c, elt->tk_p,
 					elt->tk_d, elt->tk_r);
 			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
@@ -56,7 +54,7 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	dprintf("......_rma_schedule() end\n");
 }
 
-/**
+/*
  * In RMA, tasks run to completion, and the scheduler does not preempt tasks.
  * Therefore, we can wait without timeout on the scheduled task.
  */
@@ -67,21 +65,39 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 	sem_t* sem_done = fixt_task_get_sem_done(algo->al_queue_head);
 	sem_wait(sem_done);
 
-	/* Recalculate r parameter */
+	dprintf("......_rma_block() end\n");
+}
+
+/*
+ * Recalculate the r parameter across all tasks.
+ *
+ * If a task actually ran this iteration, then the head of the queue will
+ * be that task. Adjust the r paramter by the general case.
+ *
+ * If no task ran, then all tasks must have their r parameter normalized to
+ * zero based upon the smallest r parameter in the current task pool.
+ */
+void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
+{
 	struct fixt_task* head = algo->al_queue_head;
-	int head_c = head->tk_c;
 
-	dprintf("........ head (%d, %d, %d) -> ", head->tk_c, head->tk_p, head->tk_r);
-	/* Queue head chosen to run for head_c quanta: ri' = di - c0 + ri */
-	head->tk_r = head->tk_d - head_c + head->tk_r;
-	dprintf("(%d, %d, %d)\n", head->tk_c, head->tk_p, head->tk_r);
+	int head_c;
+	if (head) {
+		/* Queue head chosen to run: Δ = c0,  ri' = di - Δ + ri */
+		head_c = head->tk_c;
+		dprintf("........ head (%d, %d, %d) -> ", head->tk_c, head->tk_p, head->tk_r);
+		head->tk_r = head->tk_d - head_c + head->tk_r;
+		dprintf("(%d, %d, %d)\n", head->tk_c, head->tk_p, head->tk_r);
+	} else {
+		/* Normalize all r parameters: Δ = min(ri) */
+		head_c = min_r(algo);
+	}
 
-	/* Tasks chosen to idle for head_c quanta: ri' = ri - c0 */
+	/* Tasks chosen to idle: ri' = ri - Δ */
 	struct fixt_task* elt;
-	DL_FOREACH2(algo->al_tasks_head, elt, _at_next)
-	{
-		if (elt != head)
-		{ /* Don't do this calculation on the queue head! */
+	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
+		/* Don't do this calculation on the queue head! */
+		if (elt != head) {
 			dprintf("........ idle (%d, %d, %d) -> ", elt->tk_c, elt->tk_p,
 					elt->tk_r);
 
@@ -90,15 +106,6 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 			dprintf("(%d, %d, %d)\n", elt->tk_c, elt->tk_p, elt->tk_r);
 		}
 	}
-
-	dprintf("......_rma_block() end\n");
-
-	/*
-	 * TODO: for a preemptive application:
-	 *
-	 *  struct timespec abs_timeout = spin_abstime_in_quanta(1);
-	 *  sem_timedwait_monotonic(&sem_wait, abs_timeout);
-	 */
 }
 
 struct fixt_algo* fixt_algo_impl_rma_new()
@@ -106,8 +113,9 @@ struct fixt_algo* fixt_algo_impl_rma_new()
 	AlgoHook al_init = &fixt_algo_impl_rma_init;
 	AlgoHook al_schedule = &fixt_algo_impl_rma_schedule;
 	AlgoHook al_block = &fixt_algo_impl_rma_block;
+	AlgoHook al_recalc = &fixt_algo_impl_rma_recalc;
 
-	return fixt_algo_new(al_init, al_schedule, al_block, POLICY_RMA);
+	return fixt_algo_new(al_init, al_schedule, al_block, al_recalc, POLICY_RMA);
 }
 
 static int rma_comparator(void* l, void* r)

@@ -12,7 +12,7 @@
  * The test fixture will run individual tests (which are infinite in nature)
  * for this number of seconds before cancelling the test.
  */
-#define FIXT_SECONDS_PER_TEST 5
+#define FIXT_SECONDS_PER_TEST 3
 
 /*
  * Initialize the test fixture (globally).
