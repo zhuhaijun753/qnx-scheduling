@@ -123,7 +123,10 @@ void spin_calibrate()
 
 	FUDGE_FACTOR = fudged_unit;
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 void spin_for(int quanta)
 {
 	int i, x = 0;
@@ -132,6 +135,7 @@ void spin_for(int quanta)
 		x = x + 1;
 	}
 }
+#pragma GCC pop_options
 
 struct timespec* spin_abstime_in_quanta(int quanta)
 {
