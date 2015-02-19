@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "fixt.h"
 
+#include "debug.h"
+
 /*
  * Start up the test fixture, run the tests, then tear everything down.
  */

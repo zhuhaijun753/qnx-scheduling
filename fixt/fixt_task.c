@@ -17,6 +17,7 @@
 #include "fixt_task.h"
 
 #include "debug.h"
+#include "log/log.h"
 
 /*
  * Value sent over the poison pill pipe indicating a thread should end
@@ -83,7 +84,6 @@ sem_t* fixt_task_run(struct fixt_task* task, int policy, int prio)
 	int tk_p = fixt_task_get_p(task);
 	int tk_d = fixt_task_get_d(task);
 	sprintf(buf, "(%d, %d, %d)", tk_c, tk_p, tk_d);
-	dprintf("buf is: %s\n", buf);
 	pthread_setname_np(t, buf);
 
 	task->tk_thread = t;
@@ -98,12 +98,14 @@ void fixt_task_del(struct fixt_task* task)
 
 void fixt_task_stop(struct fixt_task* task)
 {
+	log_func(4, "fixt_task_stop");
+
 	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
 
 	/* Force task to check for a poison pill (pthread_kill better than post) */
 	/* TODO: integrate with spin_for()'s actual solution. */
-	pthread_kill(task->tk_thread, SIGSTOP);
-	/* sem_post(task->tk_sem_continue); */
+	/* pthread_kill(task->tk_thread, SIGSTOP); */
+	sem_post(task->tk_sem_cont);
 
 	pthread_join(task->tk_thread, NULL);
 	close(task->tk_poison_pipe[0]);
@@ -111,6 +113,8 @@ void fixt_task_stop(struct fixt_task* task)
 
 	sem_destroy(task->tk_sem_cont);
 	sem_destroy(task->tk_sem_done);
+
+	log_fend(4, "fixt_task_stop");
 }
 
 static void* fixt_task_routine(void* arg)
@@ -123,14 +127,12 @@ static void* fixt_task_routine(void* arg)
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
 	int pill;
-	while (true)
-	{
+	while (true) {
 		/* Wait for the scheduler to post */
 		sem_wait(task->tk_sem_cont);
 		/* If the thread was told to quit while waiting, quit now! */
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
-		if (pill == POISON_PILL)
-			break;
+		if (pill == POISON_PILL) break;
 
 		spin_for(task->tk_c);
 
@@ -138,8 +140,7 @@ static void* fixt_task_routine(void* arg)
 		sem_post(task->tk_sem_done);
 		/* If the thread was told to quit while spinning, quit now! */
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
-		if (pill == POISON_PILL)
-			break;
+		if (pill == POISON_PILL) break;
 	}
 
 	return NULL;

@@ -17,6 +17,7 @@
 #include "spin/timing.h"
 
 #include "debug.h"
+#include "log/log.h"
 
 /*
  * A global doubly linked list (DL*) of task sets.
@@ -50,8 +51,6 @@ static void run_test_on(struct fixt_algo*);
 
 void fixt_init()
 {
-	dprintf("fixt_init\n");
-
 	/* TODO: put whole process into a high priority */
 	calibrate_spin();
 	register_tasks();
@@ -79,27 +78,29 @@ void calibrate_spin()
 
 void fixt_test()
 {
-	dprintf("fixt_test\n");
+	log_func(0, "fixt_test");
 
 	/* Run each combination of algorithm and task set */
 	struct fixt_algo* algo;
-	DL_FOREACH(algo_list, algo)
-	{
+	DL_FOREACH(algo_list, algo) {
 		struct fixt_set* set;
-		DL_FOREACH(set_list, set)
-		{
+		DL_FOREACH(set_list, set) {
 			prime_algo(algo, set);
 			run_test_on(algo);
 		}
 	}
+
+	log_fend(0, "fixt_test");
 }
 
 void fixt_term()
 {
-	dprintf("fixt_term\n");
+	log_func(0, "fixt_term");
 
 	clean_tasks();
 	clean_algos();
+
+	log_fend(0, "fixt_term");
 }
 
 /*
@@ -117,18 +118,18 @@ static void register_tasks()
 					1, 10, 10,
 					2, 16, 16));
 
-//	/* Task set #2 */
-//	DL_APPEND(set_list, fixt_set_new(2, 3*3,
-//					1, 3, 3,
-//					2, 5, 5,
-//					1, 10, 10));
-//
-//	/* Task set #3 */
-//	DL_APPEND(set_list, fixt_set_new(3, 4*3,
-//					1, 4, 4,
-//					2, 5, 5,
-//					1, 8, 8,
-//					1, 10, 10));
+	//	/* Task set #2 */
+	//	DL_APPEND(set_list, fixt_set_new(2, 3*3,
+	//					1, 3, 3,
+	//					2, 5, 5,
+	//					1, 10, 10));
+	//
+	//	/* Task set #3 */
+	//	DL_APPEND(set_list, fixt_set_new(3, 4*3,
+	//					1, 4, 4,
+	//					2, 5, 5,
+	//					1, 8, 8,
+	//					1, 10, 10));
 
 	/* @formatter:on */
 }
@@ -136,8 +137,7 @@ static void register_tasks()
 static void clean_tasks()
 {
 	struct fixt_set *elt, *tmp;
-	DL_FOREACH_SAFE(set_list, elt, tmp)
-	{
+	DL_FOREACH_SAFE(set_list, elt, tmp) {
 		DL_DELETE(set_list, elt);
 		fixt_set_del(elt);
 	}
@@ -158,8 +158,7 @@ static void register_algos()
 static void clean_algos()
 {
 	struct fixt_algo *elt, *tmp;
-	DL_FOREACH_SAFE(algo_list, elt, tmp)
-	{
+	DL_FOREACH_SAFE(algo_list, elt, tmp) {
 		DL_DELETE(algo_list, elt);
 		fixt_algo_del(elt);
 	}
@@ -167,15 +166,16 @@ static void clean_algos()
 
 static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 {
-	dprintf("..prime_algo\n");
+	log_func(1, "prime_algo");
 
 	/* Copy the task set over to the algorithms internal data */
 	struct fixt_task* elt;
-	DL_FOREACH2(set->ts_set_head, elt, _ts_next)
-	{
+	DL_FOREACH2(set->ts_set_head, elt, _ts_next) {
 		fixt_algo_add_task(algo, elt);
 	}
 	fixt_algo_init(algo);
+
+	log_fend(1, "prime_algo");
 }
 
 /*
@@ -200,11 +200,15 @@ static void run_test_on(struct fixt_algo* algo)
 	 * This could go on forever, but we only need a limited stream of data
 	 * for analysis. The halt method will kill all task threads.
 	 */
-	alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
-	while (!move_on)
-	{
+	//alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
+	struct timespec init, post, elap;
+	clock_gettime(CLOCK_REALTIME, &init);
+	do {
 		fixt_algo_schedule(algo);
 		fixt_algo_run(algo);
-	}
+
+		clock_gettime(CLOCK_REALTIME, &post);
+		timing_timespec_sub(&elap, &post, &init);
+	} while (elap.tv_sec < FIXT_SECONDS_PER_TEST);
 	fixt_algo_halt(algo);
 }

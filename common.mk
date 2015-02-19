@@ -15,7 +15,7 @@ LIBS+=c socket
 
 #===== EXTRA_SRCVPATH - a space-separated list of directories to search for source files.
 EXTRA_SRCVPATH+=$(PROJECT_ROOT)/fixt $(PROJECT_ROOT)/spin  \
-	$(PROJECT_ROOT)/fixt/impl/rma
+	$(PROJECT_ROOT)/fixt/impl/rma $(PROJECT_ROOT)/log
 
 include $(MKFILES_ROOT)/qmacros.mk
 ifndef QNX_INTERNAL

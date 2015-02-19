@@ -14,6 +14,7 @@
 #include "spin/spin.h"
 
 #include "debug.h"
+#include "log/log.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -61,7 +62,7 @@ void fixt_algo_copy_all(struct fixt_algo* algo, struct fixt_task* task)
 
 void fixt_algo_init(struct fixt_algo* algo)
 {
-	dprintf("....fixt_algo_init\n");
+	log_func(2, "fixt_algo_init");
 
 	/* Change the main fixture thread's priority to the user max! */
 	pthread_t self = pthread_self();
@@ -76,15 +77,17 @@ void fixt_algo_init(struct fixt_algo* algo)
 		fixt_task_run(elt, algo->al_preferred_policy, FIXT_ALGO_BASE_PRIO - 1);
 	}
 
-	dprintf("....fixt_algo_init (end)\n");
+	log_fend(2, "fixt_algo_init");
 }
 
 void fixt_algo_schedule(struct fixt_algo* algo)
 {
-	dprintf("....fixt_algo_schedule()\n");
+	log_func(2, "fixt_algo_schedule");
 
 	/* Defer scheduling to implementation */
 	algo->al_schedule(algo);
+
+	log_fend(2, "fixt_algo_schedule");
 }
 
 /*
@@ -97,12 +100,14 @@ void fixt_algo_schedule(struct fixt_algo* algo)
  */
 void fixt_algo_run(struct fixt_algo* algo)
 {
-	dprintf("....fixt_algo_run()\n");
+	log_func(2, "fixt_algo_run");
 
 	/* If no task needs to run, spin the scheduler until one is ready */
 	if (!algo->al_queue_head) {
+		dprintf("NULL HEAD\n");
 		spin_for(min_r(algo));
 	} else {
+		dprintf("NON_NULL HEAD\n");
 		/* Reprioritize all threads according to the queue ordering */
 		struct fixt_task* elt;
 		int prio = FIXT_ALGO_BASE_PRIO;
@@ -119,7 +124,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 
 	algo->al_recalc(algo);
 
-	dprintf("....fixt_algo_run() end\n");
+	log_fend(2, "fixt_algo_run");
 }
 
 int min_r(struct fixt_algo* algo)
@@ -134,8 +139,12 @@ int min_r(struct fixt_algo* algo)
 
 void fixt_algo_halt(struct fixt_algo* algo)
 {
+	log_func(2, "fixt_algo_halt");
+
 	struct fixt_task* elt;
 	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
 		fixt_task_stop(elt);
 	}
+
+	log_fend(2, "fixt_algo_halt");
 }

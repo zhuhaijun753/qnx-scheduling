@@ -8,6 +8,7 @@
 #include "fixt/fixt_task.h"
 #include "fixt_algo_impl_rma.h"
 
+#include "log/log.h"
 #include "debug.h"
 
 #define POLICY_RMA SCHED_FIFO /* No preemption under RMA */
@@ -33,7 +34,7 @@ void fixt_algo_impl_rma_init(struct fixt_algo* algo)
 
 void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 {
-	dprintf("......_rma_schedule()\n");
+	log_func(3, "rma_schedule");
 
 	/* Reset the queue so we can reschedule the tasks */
 	algo->al_queue_head = NULL;
@@ -42,8 +43,7 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	struct fixt_task *elt;
 	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next) {
 		if (fixt_task_get_r(elt) <= 0) {
-			dprintf("........ rchk (%d, %d, %d): %d\n", elt->tk_c, elt->tk_p,
-					elt->tk_d, elt->tk_r);
+			log_rchk(4, elt);
 			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
 		}
 	}
@@ -51,7 +51,7 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	/* Pull the task with the shortest period to the head of the queue */
 	DL_SORT2(algo->al_queue_head, (&rma_comparator), _aq_prev, _aq_next);
 
-	dprintf("......_rma_schedule() end\n");
+	log_fend(3, "rma_schedule");
 }
 
 /*
@@ -60,12 +60,12 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
  */
 void fixt_algo_impl_rma_block(struct fixt_algo* algo)
 {
-	dprintf("......_rma_block()\n");
+	log_func(3, "rma_block");
 
 	sem_t* sem_done = fixt_task_get_sem_done(algo->al_queue_head);
 	sem_wait(sem_done);
 
-	dprintf("......_rma_block() end\n");
+	log_fend(3, "rma_block");
 }
 
 /*
@@ -79,18 +79,21 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
  */
 void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
 {
+	log_func(3, "rma_recalc");
 	struct fixt_task* head = algo->al_queue_head;
 
-	int head_c;
+	int delta;
 	if (head) {
 		/* Queue head chosen to run: Δ = c0,  ri' = di - Δ + ri */
-		head_c = head->tk_c;
-		dprintf("........ head (%d, %d, %d) -> ", head->tk_c, head->tk_p, head->tk_r);
-		head->tk_r = head->tk_d - head_c + head->tk_r;
-		dprintf("(%d, %d, %d)\n", head->tk_c, head->tk_p, head->tk_r);
+		log_hbef(4, head);
+
+		delta = head->tk_c;
+		head->tk_r = head->tk_d - delta + head->tk_r;
+
+		log_haft(4, head);
 	} else {
 		/* Normalize all r parameters: Δ = min(ri) */
-		head_c = min_r(algo);
+		delta = min_r(algo);
 	}
 
 	/* Tasks chosen to idle: ri' = ri - Δ */
@@ -98,14 +101,14 @@ void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
 	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
 		/* Don't do this calculation on the queue head! */
 		if (elt != head) {
-			dprintf("........ idle (%d, %d, %d) -> ", elt->tk_c, elt->tk_p,
-					elt->tk_r);
+			log_ibef(4, elt);
 
-			elt->tk_r = elt->tk_r - head_c;
+			elt->tk_r = elt->tk_r - delta;
 
-			dprintf("(%d, %d, %d)\n", elt->tk_c, elt->tk_p, elt->tk_r);
+			log_iaft(4, elt);
 		}
 	}
+	log_fend(3, "rma_recalc");
 }
 
 struct fixt_algo* fixt_algo_impl_rma_new()
