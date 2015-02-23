@@ -19,6 +19,7 @@
 
 #include "debug.h"
 #include "log/log.h"
+#include "log/kernel_trace.h"
 
 /*
  * A global doubly linked list (DL*) of task sets.
@@ -53,9 +54,11 @@ static void run_test_on(struct fixt_algo*);
 void fixt_init()
 {
 	/* TODO: put whole process into a high priority */
+	k_log_s(1);
 	calibrate_spin();
 	register_tasks();
 	register_algos();
+	k_log_e(1);
 }
 
 void calibrate_spin()
@@ -181,8 +184,7 @@ static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 static void run_test_on(struct fixt_algo* algo)
 {
 	dprintf("..run_test_on()\n");
-
-	/*
+		/*
 	 * Before the alarm, alternate between scheduling tasks and running them.
 	 * This could go on forever, but we only need a limited stream of data
 	 * for analysis. The halt method will kill all task threads.

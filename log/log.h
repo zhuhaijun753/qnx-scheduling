@@ -22,6 +22,7 @@ void log_iaft_f(int indent, struct fixt_task* task);
 #define log_func(i, f)
 #define log_fend(i, f)
 #define log_rchk(i, t)
+#define log_hbef(i, t)
 #define log_haft(i, t)
 #define log_ibef(i, t)
 #define log_iaft(i, t)

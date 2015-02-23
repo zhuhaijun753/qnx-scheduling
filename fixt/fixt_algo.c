@@ -15,6 +15,7 @@
 
 #include "debug.h"
 #include "log/log.h"
+#include "log/kernel_trace.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -85,7 +86,9 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 	log_func(2, "fixt_algo_schedule");
 
 	/* Defer scheduling to implementation */
+	k_log_s(0);
 	algo->al_schedule(algo);
+	k_log_e(0);
 
 	log_fend(2, "fixt_algo_schedule");
 }
@@ -105,7 +108,9 @@ void fixt_algo_run(struct fixt_algo* algo)
 	/* If no task needs to run, spin the scheduler until one is ready */
 	if (!algo->al_queue_head) {
 		dprintf("NULL HEAD\n");
+		k_log_s(3);
 		spin_for(min_r(algo));
+		k_log_e(3);
 	} else {
 		dprintf("NON_NULL HEAD\n");
 		/* Reprioritize all threads according to the queue ordering */
@@ -122,7 +127,9 @@ void fixt_algo_run(struct fixt_algo* algo)
 		algo->al_block(algo);
 	}
 
+	k_log_s(0);
 	algo->al_recalc(algo);
+	k_log_e(0);
 
 	log_fend(2, "fixt_algo_run");
 }
