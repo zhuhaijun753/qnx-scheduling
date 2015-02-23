@@ -9,6 +9,7 @@
 #include <signal.h>
 #include "utlist.h"
 #include "fixt/impl/rma/fixt_algo_impl_rma.h"
+#include "fixt/impl/edf/fixt_algo_impl_edf.h"
 #include "fixt_set.h"
 #include "fixt_algo.h"
 #include "fixt_task.h"
@@ -61,7 +62,6 @@ void calibrate_spin()
 {
 	dprintf("Calibrating to the host processor...\n");
 	spin_calibrate();
-	dprintf("Calibration successful!\n");
 
 	// Verify calibration
 	struct timespec t_init, t_post, t_elap;
@@ -152,6 +152,7 @@ static void register_algos()
 {
 	/* Sched algorithm #1 - RMA */
 	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
+	DL_APPEND(algo_list, (fixt_algo_impl_edf_new()));
 }
 
 static void clean_algos()

@@ -1,5 +1,5 @@
-#ifndef FIXT_ALGO_IMPL_H_
-#define FIXT_ALGO_IMPL_H_
+#ifndef FIXT_ALGO_IMPL_RMA_H_
+#define FIXT_ALGO_IMPL_RMA_H_
 
 #include "fixt/fixt_algo.h"
 #include "fixt/fixt_hook.h"
