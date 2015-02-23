@@ -118,7 +118,7 @@ struct fixt_algo* fixt_algo_impl_sct_new()
 	AlgoHook al_block = &fixt_algo_impl_sct_block;
 	AlgoHook al_recalc = &fixt_algo_impl_sct_recalc;
 
-	return fixt_algo_new(al_init, al_schedule, al_block, al_recalc, POLICY_RMA);
+	return fixt_algo_new(al_init, al_schedule, al_block, al_recalc, POLICY_SCT);
 }
 
 static int sct_comparator(void* l, void* r)
