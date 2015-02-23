@@ -151,7 +151,6 @@ static void clean_tasks()
 static void register_algos()
 {
 	/* Sched algorithm #1 - RMA */
-	/* TODO: Figure this out */
 	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
 }
 
@@ -178,29 +177,15 @@ static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 	log_fend(1, "prime_algo");
 }
 
-/*
- * When true, the test runner should stop testing the current configuration
- */
-static volatile sig_atomic_t move_on;
-static void move_on_handler()
-{
-	dprintf(" [ SIGALRM ]\n");
-	move_on = true;
-}
 static void run_test_on(struct fixt_algo* algo)
 {
 	dprintf("..run_test_on()\n");
-	move_on = false;
 
-	struct sigaction act;
-	act.sa_handler = &move_on_handler;
-	sigaction(SIGALRM, &act, NULL);
 	/*
 	 * Before the alarm, alternate between scheduling tasks and running them.
 	 * This could go on forever, but we only need a limited stream of data
 	 * for analysis. The halt method will kill all task threads.
 	 */
-	//alarm(FIXT_SECONDS_PER_TEST); /* Posix alarm will trigger handler */
 	struct timespec init, post, elap;
 	clock_gettime(CLOCK_REALTIME, &init);
 	do {

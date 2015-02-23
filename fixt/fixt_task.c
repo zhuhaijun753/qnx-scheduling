@@ -11,7 +11,6 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <signal.h>
 #include <stdbool.h>
 #include "spin/spin.h"
 #include "fixt_task.h"
@@ -121,11 +120,6 @@ static void* fixt_task_routine(void* arg)
 {
 	struct fixt_task* task = (struct fixt_task*) arg;
 
-	/* Mask out SIGLARM so we don't get the scheduler's alarms */
-	sigset_t mask;
-	sigaddset(&mask, SIGALRM);
-	pthread_sigmask(SIG_BLOCK, &mask, NULL);
-
 	int pill;
 	while (true) {
 		/* Wait for the scheduler to post */
@@ -138,9 +132,6 @@ static void* fixt_task_routine(void* arg)
 
 		/* Notify the scheduler that this task is done executing */
 		sem_post(task->tk_sem_done);
-		/* If the thread was told to quit while spinning, quit now! */
-		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
-		if (pill == POISON_PILL) break;
 	}
 
 	return NULL;
