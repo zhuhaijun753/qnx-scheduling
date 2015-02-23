@@ -9,7 +9,7 @@ void fixt_algo_impl_edf_schedule(struct fixt_algo*);
 void fixt_algo_impl_edf_block(struct fixt_algo*);
 
 /*
- * Create a Rate Monotonic Analysis--based scheduling algorithm
+ * Create an Earliest Deadline First scheduling algorithm
  */
 struct fixt_algo* fixt_algo_impl_edf_new();
 

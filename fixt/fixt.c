@@ -152,7 +152,7 @@ static void register_algos()
 {
 	/* Sched algorithm #1 - RMA */
 	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
-	DL_APPEND(algo_list, (fixt_algo_impl_edf_new()));
+	DL_APPEND(algo_list, fixt_algo_impl_edf_new());
 }
 
 static void clean_algos()
