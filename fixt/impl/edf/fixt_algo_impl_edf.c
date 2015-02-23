@@ -118,7 +118,7 @@ struct fixt_algo* fixt_algo_impl_edf_new()
 	AlgoHook al_block = &fixt_algo_impl_edf_block;
 	AlgoHook al_recalc = &fixt_algo_impl_edf_recalc;
 
-	return fixt_algo_new(al_init, al_schedule, al_block, al_recalc, POLICY_RMA);
+	return fixt_algo_new(al_init, al_schedule, al_block, al_recalc, POLICY_EDF);
 }
 
 static int edf_comparator(void* l, void* r)
