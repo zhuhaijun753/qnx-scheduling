@@ -84,8 +84,15 @@ void fixt_test()
 {
 	log_func(0, "fixt_test");
 
+
+
 	/* Run each combination of algorithm and task set */
 	struct fixt_algo* algo;
+	int count = 0;
+	DL_COUNT(algo_list, algo, count);
+
+	dprintf(">>> FIXT_TEST NUM ALGOS = %d\n", count);
+
 	DL_FOREACH(algo_list, algo) {
 		struct fixt_set* set;
 		DL_FOREACH(set_list, set) {
@@ -154,9 +161,15 @@ static void clean_tasks()
  */
 static void register_algos()
 {
-	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
-	DL_APPEND(algo_list, fixt_algo_impl_edf_new());
-	DL_APPEND(algo_list, fixt_algo_impl_sct_new());
+	algo_list = NULL;
+
+	struct fixt_algo* rma = fixt_algo_impl_rma_new();
+	struct fixt_algo* edf = fixt_algo_impl_edf_new();
+	struct fixt_algo* sct = fixt_algo_impl_sct_new();
+
+	DL_APPEND(algo_list, rma);
+	DL_APPEND(algo_list, edf);
+	DL_APPEND(algo_list, sct);
 }
 
 static void clean_algos()
