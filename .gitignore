@@ -1,6 +1,7 @@
 # Binary files
 qnx-scheduling
 qnx-scheduling_g
+*.kev
 
 # Object files
 *.o
