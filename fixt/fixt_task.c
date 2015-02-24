@@ -17,6 +17,7 @@
 
 #include "debug.h"
 #include "log/log.h"
+#include "log/kernel_trace.h"
 
 /*
  * Value sent over the poison pill pipe indicating a thread should end
@@ -129,9 +130,10 @@ static void* fixt_task_routine(void* arg)
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL) break;
 
-		/* spin_for(fixt_task_completion_time(task)); */
+		k_log_s(2);
 		/* Preemption handles splitting execution across quanta! */
 		spin_for(task->tk_c);
+		k_log_e(2);
 
 		/* Notify the scheduler that this task is done executing */
 		sem_post(task->tk_sem_done);
