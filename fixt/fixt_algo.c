@@ -154,9 +154,10 @@ void fixt_algo_halt(struct fixt_algo* algo)
 {
 	log_func(2, "fixt_algo_halt");
 
-	struct fixt_task* elt;
-	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
+	struct fixt_task *elt, *tmp;
+	DL_FOREACH_SAFE2(algo->al_tasks_head, elt, tmp, _at_next) {
 		fixt_task_stop(elt);
+		DL_DELETE2(algo->al_tasks_head, elt, _at_prev, _at_next);
 	}
 
 	log_fend(2, "fixt_algo_halt");
