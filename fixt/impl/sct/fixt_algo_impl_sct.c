@@ -1,6 +1,8 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
+#include <errno.h>
 #include "utlist.h"
 #include "spin/spin.h"
 #include "fixt/fixt_hook.h"
@@ -11,16 +13,19 @@
 #include "log/log.h"
 #include "debug.h"
 
-#define POLICY_SCT SCHED_FIFO /* No preemption under RMA */
+#define POLICY_SCT SCHED_FIFO /* SCT does not actually require RR! */
 
 /*
- * This comparator compares two tasks under RMA and generates an ordering
- * such that tasks with small periods have high priority.
+ * This comparator compares two tasks under SCT and generates an ordering
+ * such that tasks short completion times will have high priority.
  */
 static int sct_comparator(void*, void*);
 
 /*
- * RMA requires the fixture thread (self) to use a FIFO policy.
+ * SCT requires the fixture thread (self) and all child task threads to use a
+ * FIFO policy. Since the scheduler manipulates thread priorities to align with
+ * the queueing order, we don't actually have any user threads within the
+ * same priority. Therefore, RR does not apply to our solution.
  *
  * From QNX: a thread selected to run continues executing until it:
  *  - voluntarily relinquishes control (e.g., it blocks)
@@ -55,15 +60,27 @@ void fixt_algo_impl_sct_schedule(struct fixt_algo* algo)
 }
 
 /*
- * In RMA, tasks run to completion, and the scheduler does not preempt tasks.
- * Therefore, we can wait without timeout on the scheduled task.
+ * In SCT, tasks do not necessarily run to completion. The scheduler preempts
+ * user tasks at a period of SPIN_QUANTUM_WIDTH_MS. This is possible because
+ * the scheduler always maintains the highest priority out of any (non-QNX)
+ * tasks in our system.
+ *
+ * This all means user tasks may only run when the scheduler thread is blocked.
+ * We block the scheduler for one quanta by using a timed wait.
  */
 void fixt_algo_impl_sct_block(struct fixt_algo* algo)
 {
 	log_func(3, "sct_block");
 
 	sem_t* sem_done = fixt_task_get_sem_done(algo->al_queue_head);
-	sem_wait(sem_done);
+	struct timespec abs_next;
+	abs_next = spin_abstime_in_quanta(SCT_PERIOD, SCT_JITTER);
+
+	if(sem_timedwait(sem_done, &abs_next) == 0) {
+		log_msg(4, "[ Scheduler Resume b/c Task Completed ]");
+	} else if(errno == ETIMEDOUT) {
+		log_msg(4, "[ Scheduler Preemption ]");
+	}
 
 	log_fend(3, "sct_block");
 }
@@ -84,11 +101,20 @@ void fixt_algo_impl_sct_recalc(struct fixt_algo* algo)
 
 	int delta;
 	if (head) {
-		/* Queue head chosen to run: Δ = c0,  ri' = di - Δ + ri */
 		log_hbef(4, head);
 
-		delta = head->tk_c;
-		head->tk_r = head->tk_d - delta + head->tk_r;
+		/* Queue head chosen to run: Δ = scheduler period */
+		delta = SCT_PERIOD;
+		head->tk_a += delta; /* Add one to the task's accumlated time */
+
+		if(fixt_task_completion_time(head) > 0) {
+			/* Still execution time left: task is still ready */
+			head->tk_r = head->tk_r - delta;
+		} else {
+			/* No execution time left: calculate time til next period */
+			head->tk_r = head->tk_d - delta + head->tk_r;
+			head->tk_a = 0; /* Reset accumulated time */
+		}
 
 		log_haft(4, head);
 	} else {
@@ -126,8 +152,8 @@ static int sct_comparator(void* l, void* r)
 	struct fixt_task* task_l = (struct fixt_task*) l;
 	struct fixt_task* task_r = (struct fixt_task*) r;
 	/*
-	 * If the left task has a smaller period than the right task, then the
-	 * function will return a negative number, etc.
+	 * If the left task has a smaller completion time than the right task,
+	 * then the function will return a negative number, etc.
 	 */
-	return task_l->tk_c - task_r->tk_c;
+	return fixt_task_completion_time(task_l) - fixt_task_completion_time(task_r);
 }

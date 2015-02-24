@@ -10,6 +10,7 @@
 #include "utlist.h"
 #include "fixt/impl/rma/fixt_algo_impl_rma.h"
 #include "fixt/impl/edf/fixt_algo_impl_edf.h"
+#include "fixt/impl/sct/fixt_algo_impl_sct.h"
 #include "fixt_set.h"
 #include "fixt_algo.h"
 #include "fixt_task.h"
@@ -146,13 +147,13 @@ static void clean_tasks()
 /*
  * User: register the algorithms you want to use here. You do this by
  * using a method of the form fixt_algo_impl_{name}_new(). You can find
- * this methods in fixt/impl
+ * these methods in fixt/impl
  */
 static void register_algos()
 {
-	/* Sched algorithm #1 - RMA */
 	DL_APPEND(algo_list, fixt_algo_impl_rma_new());
 	DL_APPEND(algo_list, fixt_algo_impl_edf_new());
+	DL_APPEND(algo_list, fixt_algo_impl_sct_new());
 }
 
 static void clean_algos()

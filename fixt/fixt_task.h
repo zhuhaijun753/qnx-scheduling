@@ -18,6 +18,7 @@
  */
 struct fixt_task
 {
+	int tk_a; /* Task run time accumlated in a single period */
 	int tk_c, tk_p, tk_d; /* Standard task timing tuple */
 	int tk_r; /* Nuber of quanta until ready to execute */
 
@@ -63,10 +64,16 @@ void fixt_task_set_prio(struct fixt_task*, int prio);
  */
 void fixt_task_set_param(struct fixt_task*, int param);
 
+int fixt_task_get_a(struct fixt_task*);
 int fixt_task_get_c(struct fixt_task*);
 int fixt_task_get_p(struct fixt_task*);
 int fixt_task_get_d(struct fixt_task*);
 int fixt_task_get_r(struct fixt_task*);
+
+/**
+ * Return the number of quanta this task will take to complete
+ */
+int fixt_task_completion_time(struct fixt_task*);
 
 /*
  * Scheduler posts sem_cont to release the task for execution.

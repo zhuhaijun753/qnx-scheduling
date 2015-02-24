@@ -29,6 +29,6 @@ void spin_for(int quanta);
  * Generate an absolute timespec representing the time a particular
  * number of quanta from now.
  */
-struct timespec* spin_abstime_in_quanta(int quanta);
+struct timespec spin_abstime_in_quanta(int quanta, long jitter_ns);
 
 #endif

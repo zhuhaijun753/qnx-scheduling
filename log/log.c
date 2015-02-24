@@ -43,3 +43,7 @@ void log_iaft_f(int indent, struct fixt_task* task)
 {
 	printf("(%d, %d, %d: %d)\n", task->tk_c, task->tk_p, task->tk_d, task->tk_r);
 }
+
+void log_msg_f(int indent, char* msg) {
+	printf("%s %s\n", dots[indent], msg);
+}

@@ -32,10 +32,11 @@ static void* fixt_task_routine(void*);
 struct fixt_task* fixt_task_new(int c, int p, int d)
 {
 	struct fixt_task* task = malloc(sizeof *task);
+	task->tk_a = 0; /* To start, a task has run for 0 quanta */
 	task->tk_c = c;
 	task->tk_p = p;
 	task->tk_d = d;
-	task->tk_r = 0;
+	task->tk_r = 0; /* To start, all tasks are ready */
 	task->tk_routine = &fixt_task_routine;
 
 	/* OOPS - we should find a better way to do lists */
@@ -51,6 +52,10 @@ struct fixt_task* fixt_task_new(int c, int p, int d)
 
 sem_t* fixt_task_run(struct fixt_task* task, int policy, int prio)
 {
+	/* Every time a task is run from scratch, re-init tk_a and tk_r */
+	task->tk_a = 0;
+	task->tk_r = 0;
+
 	pipe(task->tk_poison_pipe);
 	/* Set to nonblocking. A thread join is used to sync threads instead */
 	fcntl(task->tk_poison_pipe[0], F_SETFL, O_NONBLOCK);
@@ -100,10 +105,6 @@ void fixt_task_stop(struct fixt_task* task)
 	log_func(4, "fixt_task_stop");
 
 	write(task->tk_poison_pipe[1], &POISON_PILL, sizeof(POISON_PILL));
-
-	/* Force task to check for a poison pill (pthread_kill better than post) */
-	/* TODO: integrate with spin_for()'s actual solution. */
-	/* pthread_kill(task->tk_thread, SIGSTOP); */
 	sem_post(task->tk_sem_cont);
 
 	pthread_join(task->tk_thread, NULL);
@@ -128,6 +129,8 @@ static void* fixt_task_routine(void* arg)
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL) break;
 
+		/* spin_for(fixt_task_completion_time(task)); */
+		/* Preemption handles splitting execution across quanta! */
 		spin_for(task->tk_c);
 
 		/* Notify the scheduler that this task is done executing */
@@ -145,6 +148,11 @@ void fixt_task_set_prio(struct fixt_task* task, int prio)
 void fixt_task_set_param(struct fixt_task* task, int param)
 {
 	pthread_setschedparam(task->tk_thread, param, NULL);
+}
+
+int fixt_task_get_a(struct fixt_task* task)
+{
+	return task->tk_a;
 }
 
 int fixt_task_get_c(struct fixt_task* task)
@@ -165,6 +173,11 @@ int fixt_task_get_d(struct fixt_task* task)
 int fixt_task_get_r(struct fixt_task* task)
 {
 	return task->tk_r;
+}
+
+int fixt_task_completion_time(struct fixt_task* task)
+{
+	return task->tk_c - task->tk_a;
 }
 
 sem_t* fixt_task_get_sem_cont(struct fixt_task* task)

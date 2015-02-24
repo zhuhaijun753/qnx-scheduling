@@ -104,10 +104,12 @@ void fixt_algo_run(struct fixt_algo* algo)
 
 	/* If no task needs to run, spin the scheduler until one is ready */
 	if (!algo->al_queue_head) {
-		dprintf("NULL HEAD\n");
+		log_msg(3, "[ Null Queue Head ]");
+
 		spin_for(min_r(algo));
 	} else {
-		dprintf("NON_NULL HEAD\n");
+		log_msg(3, "[ Non-Null Queue Head ]");
+
 		/* Reprioritize all threads according to the queue ordering */
 		struct fixt_task* elt;
 		int prio = FIXT_ALGO_BASE_PRIO;
@@ -115,9 +117,13 @@ void fixt_algo_run(struct fixt_algo* algo)
 			fixt_task_set_prio(elt, --prio); /* In descending order */
 		}
 
-		/* Release the head task for execution */
+		/* Release the head task for execution - only if the task is waiting */
 		sem_t* sem_cont = fixt_task_get_sem_cont(algo->al_queue_head);
-		sem_post(sem_cont);
+		int sem_cont_value;
+		sem_getvalue(sem_cont, &sem_cont_value);
+		if(sem_cont_value == 0) { /* Post only if task is waiting! */
+			sem_post(sem_cont);
+		}
 
 		algo->al_block(algo);
 	}

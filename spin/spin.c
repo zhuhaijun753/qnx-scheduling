@@ -130,15 +130,24 @@ void spin_calibrate()
 void spin_for(int quanta)
 {
 	int i, x = 0;
-	for (i = 0; i < quanta * FUDGE_FACTOR; i++)
+	for (i = 0; i < (quanta * FUDGE_FACTOR); i++)
 	{
 		x = x + 1;
 	}
 }
 #pragma GCC pop_options
 
-struct timespec* spin_abstime_in_quanta(int quanta)
+struct timespec spin_abstime_in_quanta(int quanta, long jitter_ns)
 {
-	/* TODO: Implement solution */
-	return NULL;
+	struct timespec abs_next;
+	clock_gettime(CLOCK_REALTIME, &abs_next);
+
+	abs_next.tv_nsec += (SPIN_QUANTUM_WIDTH_MS * quanta * 1000000) + jitter_ns;
+	long remainder = abs_next.tv_nsec - 1000000000;
+	if(remainder > 0) {
+		abs_next.tv_nsec = remainder;
+		abs_next.tv_sec += 1;
+	}
+
+	return abs_next;
 }
