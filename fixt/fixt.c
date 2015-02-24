@@ -115,33 +115,36 @@ void fixt_term()
 }
 
 /*
- * User: place task set definitions here
+ * User: place task set definitions here. Be aware of macro double evaluation.
  */
 static void register_tasks()
 {
 	/* @formatter:off */
 
 	/* Task set #1 */
-	DL_APPEND(set_list, fixt_set_new(1, 5*3,
-					1, 7, 7,
-					2, 5, 5,
-					1, 8, 8,
-					1, 10, 10,
-					2, 16, 16));
+	struct fixt_set* set1 = fixt_set_new(1, 5*3,
+			1, 7, 7,
+			2, 5, 5,
+			1, 8, 8,
+			1, 10, 10,
+			2, 16, 16);
 
-	//	/* Task set #2 */
-	//	DL_APPEND(set_list, fixt_set_new(2, 3*3,
-	//					1, 3, 3,
-	//					2, 5, 5,
-	//					1, 10, 10));
-	//
-	//	/* Task set #3 */
-	//	DL_APPEND(set_list, fixt_set_new(3, 4*3,
-	//					1, 4, 4,
-	//					2, 5, 5,
-	//					1, 8, 8,
-	//					1, 10, 10));
+	/* Task set #2 */
+	struct fixt_set* set2 = fixt_set_new(2, 3*3,
+			1, 3, 3,
+			2, 5, 5,
+			1, 10, 10);
 
+	/* Task set #3 */
+	struct fixt_set* set3 = fixt_set_new(3, 4*3,
+			1, 4, 4,
+			2, 5, 5,
+			1, 8, 8,
+			1, 10, 10);
+
+	DL_APPEND(set_list, set1);
+	DL_APPEND(set_list, set2);
+	DL_APPEND(set_list, set3);
 	/* @formatter:on */
 }
 
@@ -157,7 +160,9 @@ static void clean_tasks()
 /*
  * User: register the algorithms you want to use here. You do this by
  * using a method of the form fixt_algo_impl_{name}_new(). You can find
- * these methods in fixt/impl
+ * these methods in fixt/impl.
+ *
+ * Be aware of macro double evaluation.
  */
 static void register_algos()
 {
