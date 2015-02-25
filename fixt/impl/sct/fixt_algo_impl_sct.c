@@ -89,7 +89,8 @@ void fixt_algo_impl_sct_block(struct fixt_algo* algo)
  * Recalculate the r parameter across all tasks.
  *
  * If a task actually ran this iteration, then the head of the queue will
- * be that task. Adjust the r paramter by the general case.
+ * be that task. Adjust the r paramter by the general case. Calculate time
+ * until ready for next period.
  *
  * If no task ran, then all tasks must have their r parameter normalized to
  * zero based upon the smallest r parameter in the current task pool.
@@ -112,7 +113,7 @@ void fixt_algo_impl_sct_recalc(struct fixt_algo* algo)
 			head->tk_r = head->tk_r - delta;
 		} else {
 			/* No execution time left: calculate time til next period */
-			head->tk_r = head->tk_d - delta + head->tk_r;
+			head->tk_r = head->tk_p - delta + head->tk_r;
 			head->tk_a = 0; /* Reset accumulated time */
 		}
 
