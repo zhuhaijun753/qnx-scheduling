@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include "fixt_hook.h"
 
-#define FIXT_ALGO_BASE_PRIO 63
+#define FIXT_ALGO_BASE_PRIO 9 /* qconn port=8000 qconn_prio=10 */
 
 struct fixt_task;
 

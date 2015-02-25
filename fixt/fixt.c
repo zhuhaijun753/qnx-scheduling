@@ -117,8 +117,8 @@ static void register_tasks()
 			1, 10, 10);
 
 	DL_APPEND(set_list, set1);
-	DL_APPEND(set_list, set2);
-	DL_APPEND(set_list, set3);
+	//DL_APPEND(set_list, set2);
+	//DL_APPEND(set_list, set3);
 	/* @formatter:on */
 }
 
@@ -147,8 +147,8 @@ static void register_algos()
 	struct fixt_algo* sct = fixt_algo_impl_sct_new();
 
 	DL_APPEND(algo_list, rma);
-	DL_APPEND(algo_list, edf);
-	DL_APPEND(algo_list, sct);
+	//DL_APPEND(algo_list, edf);
+	//DL_APPEND(algo_list, sct);
 }
 
 static void clean_algos()
