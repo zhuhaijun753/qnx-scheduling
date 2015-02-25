@@ -99,10 +99,10 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 		avail_c = fixt_task_get_d(elt) + fixt_task_get_r(elt);
 		if(elt == algo->al_queue_head) {
 			/* If elt is the head, then we can Indiana Jones our tk_c */
-			schedulable &= (fixt_task_get_c(elt) <= avail_c);
+			schedulable &= (fixt_task_completion_time(elt) <= avail_c);
 		} else {
 			/* Otherwise, tk_c < avail_c, because elt won't have avail_c next */
-			schedulable &= (fixt_task_get_c(elt) < avail_c);
+			schedulable &= (fixt_task_completion_time(elt) < avail_c);
 		}
 	}
 	algo->al_schedulable = schedulable;
