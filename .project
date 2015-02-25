@@ -14,6 +14,10 @@
 					<value>com.qnx.tools.ide.qde.core.IntelCErrorParser;com.qnx.tools.ide.qde.core.QdeExtraMakeErrorParser;org.eclipse.cdt.core.MakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.VCErrorParser;</value>
 				</dictionary>
 				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.arguments</key>
+					<value></value>
+				</dictionary>
+				<dictionary>
 					<key>org.eclipse.cdt.make.core.build.command</key>
 					<value>make</value>
 				</dictionary>
@@ -59,7 +63,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>
-					<value>true</value>
+					<value>false</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>

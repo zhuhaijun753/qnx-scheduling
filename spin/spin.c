@@ -18,6 +18,9 @@
 #include "fixt/fixt_algo.h"
 #include "spin.h"
 
+#include "log/log.h"
+#include "debug.h"
+
 static int FUDGE_FACTOR;
 
 #pragma GCC push_options
@@ -25,6 +28,8 @@ static int FUDGE_FACTOR;
 
 void spin_calibrate()
 {
+	log_msg(0, "[ Calibrating to the host processor ]");
+
 	/* Set thread to highest user priority so we reduce jitter */
 	pthread_t self = pthread_self();
 	pthread_setschedprio(self, FIXT_ALGO_BASE_PRIO);
@@ -122,6 +127,18 @@ void spin_calibrate()
 	}
 
 	FUDGE_FACTOR = fudged_unit;
+
+	/* Verify calibration */
+	log_msg(0, "[ Target 10ms ]");
+
+	clock_gettime(CLOCK_REALTIME, &t_init);
+	spin_for(1);
+	clock_gettime(CLOCK_REALTIME, &t_post);
+
+	timing_timespec_sub(&t_elap, &t_post, &t_init);
+	dprintf("[ Actual %ldms ]\n", t_elap.tv_nsec / 1000000);
+
+	log_msg(0, "[ Calibration successful! ]");
 }
 #pragma GCC pop_options
 
