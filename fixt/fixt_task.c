@@ -130,10 +130,11 @@ static void* fixt_task_routine(void* arg)
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL) break;
 
-		k_log_s(2);
+
 		/* Preemption handles splitting execution across quanta! */
+		k_log_s(3);
 		spin_for(task->tk_c);
-		k_log_e(2);
+		k_log_e(3);
 
 		/* Notify the scheduler that this task is done executing */
 		sem_post(task->tk_sem_done);

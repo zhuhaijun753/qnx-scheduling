@@ -53,11 +53,11 @@ static void run_test_on(struct fixt_algo*);
 void fixt_init()
 {
 	/* TODO: put whole process into a high priority */
-	k_log_s(1);
+	k_log_s(0);
 	spin_calibrate();
 	register_tasks();
 	register_algos();
-	k_log_e(1);
+	k_log_e(0);
 }
 
 void fixt_test()
@@ -147,8 +147,8 @@ static void register_algos()
 	struct fixt_algo* sct = fixt_algo_impl_sct_new();
 
 	DL_APPEND(algo_list, rma);
-	DL_APPEND(algo_list, edf);
-	DL_APPEND(algo_list, sct);
+	//DL_APPEND(algo_list, edf);
+	//DL_APPEND(algo_list, sct);
 }
 
 static void clean_algos()

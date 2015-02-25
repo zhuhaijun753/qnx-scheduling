@@ -86,9 +86,9 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 	log_func(2, "fixt_algo_schedule");
 
 	/* Defer scheduling to implementation */
-	k_log_s(0);
+	k_log_s(2);
 	algo->al_schedule(algo);
-	k_log_e(0);
+	k_log_e(2);
 
 	log_fend(2, "fixt_algo_schedule");
 }
@@ -108,10 +108,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	/* If no task needs to run, spin the scheduler until one is ready */
 	if (!algo->al_queue_head) {
 		log_msg(3, "[ Null Queue Head ]");
-
-		k_log_s(3);
 		spin_for(min_r(algo));
-		k_log_e(3);
 	} else {
 		log_msg(3, "[ Non-Null Queue Head ]");
 
@@ -133,9 +130,9 @@ void fixt_algo_run(struct fixt_algo* algo)
 		algo->al_block(algo);
 	}
 
-	k_log_s(0);
+	k_log_s(2);
 	algo->al_recalc(algo);
-	k_log_e(0);
+	k_log_e(2);
 
 	log_fend(2, "fixt_algo_run");
 }
