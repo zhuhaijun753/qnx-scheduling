@@ -20,5 +20,9 @@ int main(int argc, char *argv[])
 
 	fixt_term();
 
+#if LOG_K_METHOD == 2
+	k_log_csv_print();
+#endif
+
 	return EXIT_SUCCESS;
 }
