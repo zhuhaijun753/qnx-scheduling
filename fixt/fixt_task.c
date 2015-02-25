@@ -30,9 +30,11 @@ static const int POISON_PILL = 1;
  */
 static void* fixt_task_routine(void*);
 
-struct fixt_task* fixt_task_new(int c, int p, int d)
+struct fixt_task* fixt_task_new(int id, int c, int p, int d)
 {
 	struct fixt_task* task = malloc(sizeof *task);
+	task->tk_id = id;
+
 	task->tk_a = 0; /* To start, a task has run for 0 quanta */
 	task->tk_c = c;
 	task->tk_p = p;
@@ -132,9 +134,9 @@ static void* fixt_task_routine(void* arg)
 
 
 		/* Preemption handles splitting execution across quanta! */
-		k_log_s(3);
+		k_log_s(3 + task->tk_id);
 		spin_for(task->tk_c);
-		k_log_e(3);
+		k_log_e(3 + task->tk_id);
 
 		/* Notify the scheduler that this task is done executing */
 		sem_post(task->tk_sem_done);

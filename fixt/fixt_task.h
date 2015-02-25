@@ -18,6 +18,8 @@
  */
 struct fixt_task
 {
+	int tk_id; /* Task id */
+
 	int tk_a; /* Task run time accumlated in a single period */
 	int tk_c, tk_p, tk_d; /* Standard task timing tuple */
 	int tk_r; /* Nuber of quanta until ready to execute */
@@ -40,7 +42,7 @@ struct fixt_task
  * Create a new task and initialize internal state. The fixture is responsible
  * for managing the lifecycle of tasks.
  */
-struct fixt_task* fixt_task_new(int c, int p, int d);
+struct fixt_task* fixt_task_new(int id, int c, int p, int d);
 void fixt_task_del(struct fixt_task*);
 
 /*
