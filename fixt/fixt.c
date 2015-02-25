@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <signal.h>
+#include <stdio.h>
 #include "utlist.h"
 #include "fixt/impl/rma/fixt_algo_impl_rma.h"
 #include "fixt/impl/edf/fixt_algo_impl_edf.h"
@@ -65,13 +66,21 @@ void fixt_test()
 	log_func(0, "fixt_test");
 
 	/* Run each combination of algorithm and task set */
-	struct fixt_algo* algo;
+	struct fixt_algo* algo; int a = 0;
 	DL_FOREACH(algo_list, algo) {
-		struct fixt_set* set;
+		struct fixt_set* set; int s = 0;
 		DL_FOREACH(set_list, set) {
 			prime_algo(algo, set);
-			run_test_on(algo);
+			run_test_on(algo); /* Returns if algo becomes unschedulable */
+
+			if(algo->al_schedulable) {
+				printf(" [ ALGO %d TEST SET %d PASS ]\n", a, s);
+			} else {
+				printf(" [ ALGO %d TEST SET %d FAIL ]\n", a, s);
+			}
+			s++;
 		}
+		a++;
 	}
 
 	log_fend(0, "fixt_test");
@@ -177,7 +186,7 @@ static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 static void run_test_on(struct fixt_algo* algo)
 {
 	dprintf("..run_test_on()\n");
-		/*
+    /*
 	 * Before the alarm, alternate between scheduling tasks and running them.
 	 * This could go on forever, but we only need a limited stream of data
 	 * for analysis. The halt method will kill all task threads.
@@ -186,8 +195,12 @@ static void run_test_on(struct fixt_algo* algo)
 	clock_gettime(CLOCK_REALTIME, &init);
 	do {
 		fixt_algo_schedule(algo);
-		fixt_algo_run(algo);
-
+		if(algo->al_schedulable) {
+			fixt_algo_run(algo);
+		} else {
+			/* Algo is no longer schedulable. End test and halt threads */
+			break;
+		}
 		clock_gettime(CLOCK_REALTIME, &post);
 		timing_timespec_sub(&elap, &post, &init);
 	} while (elap.tv_sec < FIXT_SECONDS_PER_TEST);

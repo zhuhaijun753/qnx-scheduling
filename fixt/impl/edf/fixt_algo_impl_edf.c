@@ -72,7 +72,8 @@ void fixt_algo_impl_edf_block(struct fixt_algo* algo)
  * Recalculate the r parameter across all tasks.
  *
  * If a task actually ran this iteration, then the head of the queue will
- * be that task. Adjust the r paramter by the general case.
+ * be that task. Adjust the r paramter by the general case. Calculate time
+ * until ready for next period.
  *
  * If no task ran, then all tasks must have their r parameter normalized to
  * zero based upon the smallest r parameter in the current task pool.
@@ -84,11 +85,11 @@ void fixt_algo_impl_edf_recalc(struct fixt_algo* algo)
 
 	int delta;
 	if (head) {
-		/* Queue head chosen to run: Δ = c0,  ri' = di - Δ + ri */
+		/* Queue head chosen to run: Δ = c0,  pi' = di - Δ + ri */
 		log_hbef(4, head);
 
 		delta = head->tk_c;
-		head->tk_r = head->tk_d - delta + head->tk_r;
+		head->tk_r = head->tk_p - delta + head->tk_r;
 
 		log_haft(4, head);
 	} else {

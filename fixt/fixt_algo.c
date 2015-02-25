@@ -7,6 +7,7 @@
 
 #include <semaphore.h>
 #include <limits.h>
+#include <stdbool.h>
 #include "utlist.h"
 #include "fixt_task.h"
 #include "fixt_hook.h"
@@ -84,12 +85,29 @@ void fixt_algo_init(struct fixt_algo* algo)
 void fixt_algo_schedule(struct fixt_algo* algo)
 {
 	log_func(2, "fixt_algo_schedule");
+	k_log_s(0);
 
 	/* Defer scheduling to implementation */
-	k_log_s(0);
 	algo->al_schedule(algo);
-	k_log_e(0);
 
+	/* See if our queue is schedulable */
+	struct fixt_task* elt;
+	bool schedulable = true;
+	int avail_c;
+	DL_FOREACH2(algo->al_queue_head, elt, _aq_next) {
+		/* The time availalbe if elt was run next - based on deadline */
+		avail_c = fixt_task_get_d(elt) + fixt_task_get_r(elt);
+		if(elt == algo->al_queue_head) {
+			/* If elt is the head, then we can Indiana Jones our tk_c */
+			schedulable &= (fixt_task_get_c(elt) <= avail_c);
+		} else {
+			/* Otherwise, tk_c < avail_c, because elt won't have avail_c next */
+			schedulable &= (fixt_task_get_c(elt) < avail_c);
+		}
+	}
+	algo->al_schedulable = schedulable;
+
+	k_log_e(0);
 	log_fend(2, "fixt_algo_schedule");
 }
 

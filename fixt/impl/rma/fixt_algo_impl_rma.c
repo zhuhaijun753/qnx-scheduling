@@ -42,6 +42,7 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	/* Only consider tasks that are ready (r <= 0) */
 	struct fixt_task *elt;
 	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next) {
+		// TODO: error out if unschedulable
 		if (fixt_task_get_r(elt) <= 0) {
 			log_rchk(4, elt);
 			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
@@ -72,7 +73,8 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
  * Recalculate the r parameter across all tasks.
  *
  * If a task actually ran this iteration, then the head of the queue will
- * be that task. Adjust the r paramter by the general case.
+ * be that task. Adjust the r paramter by the general case. Calculate time
+ * until ready for next period.
  *
  * If no task ran, then all tasks must have their r parameter normalized to
  * zero based upon the smallest r parameter in the current task pool.
@@ -84,11 +86,11 @@ void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
 
 	int delta;
 	if (head) {
-		/* Queue head chosen to run: Δ = c0,  ri' = di - Δ + ri */
+		/* Queue head chosen to run: Δ = c0,  ri' = pi - Δ + ri */
 		log_hbef(4, head);
 
 		delta = head->tk_c;
-		head->tk_r = head->tk_d - delta + head->tk_r;
+		head->tk_r = head->tk_p - delta + head->tk_r;
 
 		log_haft(4, head);
 	} else {

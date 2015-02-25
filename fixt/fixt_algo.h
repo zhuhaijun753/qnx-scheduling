@@ -9,6 +9,7 @@
 #define FIXT_ALGO_H
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include "fixt_hook.h"
 
 #define FIXT_ALGO_BASE_PRIO 9 /* qconn port=8000 qconn_prio=10 */
@@ -23,6 +24,8 @@ struct fixt_algo
 	AlgoHook al_recalc; /* Hooks which updates bookeeping after a run */
 
 	int al_preferred_policy; /* Scheduling policy for all new task threads */
+
+	bool al_schedulable; /* Updated after fixt_algo_schedule() is run */
 
 	struct fixt_task* al_tasks_head; /* List of tasks managed by this algo */
 	struct fixt_task* al_queue_head; /* Ordering of tasks at any given time */
