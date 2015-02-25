@@ -30,7 +30,7 @@ struct fixt_set* fixt_set_new(int id, int size, ...)
 		int p = va_arg(tuples, int);
 		int d = va_arg(tuples, int);
 
-		task = fixt_task_new(tuple % 3, c, p, d);
+		task = fixt_task_new(tuple / 3, c, p, d);
 		DL_APPEND2(set->ts_set_head, task, _ts_prev, _ts_next);
 	}
 	va_end(tuples);
