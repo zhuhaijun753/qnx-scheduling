@@ -19,7 +19,6 @@
 #include "spin/spin.h"
 #include "spin/timing.h"
 
-#include "debug.h"
 #include "log/log.h"
 #include "log/kernel_trace.h"
 
@@ -36,7 +35,7 @@ static struct fixt_algo* algo_list = NULL;
 static void register_tasks(); /* User task sets go here */
 static void register_algos(); /* User pulls in algorithms here */
 
-static void clean_tasks(); /* Clean up resources */
+static void clean_tasks();
 static void clean_algos();
 
 /*
@@ -53,7 +52,6 @@ static void run_test_on(struct fixt_algo*);
 
 void fixt_init()
 {
-	/* TODO: put whole process into a high priority */
 	k_log_s(LOG_K_FIXT);
 	spin_calibrate();
 	register_tasks();
@@ -126,8 +124,8 @@ static void register_tasks()
 			1, 10, 10);
 
 	DL_APPEND(set_list, set1);
-	//DL_APPEND(set_list, set2);
-	//DL_APPEND(set_list, set3);
+	DL_APPEND(set_list, set2);
+	DL_APPEND(set_list, set3);
 	/* @formatter:on */
 }
 
@@ -156,8 +154,8 @@ static void register_algos()
 	struct fixt_algo* sct = fixt_algo_impl_sct_new();
 
 	DL_APPEND(algo_list, rma);
-	//DL_APPEND(algo_list, edf);
-	//DL_APPEND(algo_list, sct);
+	DL_APPEND(algo_list, edf);
+	DL_APPEND(algo_list, sct);
 }
 
 static void clean_algos()

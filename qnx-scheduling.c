@@ -1,8 +1,14 @@
+/*
+ * File: qnx-scheduling.c
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: Main file for the scheduling project
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "fixt.h"
 
-#include "debug.h"
 #include "log/kernel_trace.h"
 
 /*

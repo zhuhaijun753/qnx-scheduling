@@ -14,11 +14,11 @@
 #include "fixt_algo.h"
 #include "spin/spin.h"
 
-#include "debug.h"
 #include "log/log.h"
 #include "log/kernel_trace.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 struct fixt_algo* fixt_algo_new(AlgoHook i, AlgoHook s, AlgoHook b, AlgoHook r,
 		int policy)
@@ -42,6 +42,10 @@ void fixt_algo_del(struct fixt_algo* algo)
 	struct fixt_task *elt, *tmp;
 	DL_FOREACH_SAFE2(algo->al_tasks_head, elt, tmp, _at_next) {
 		DL_DELETE2(algo->al_tasks_head, elt, _at_prev, _at_next);
+		/* fixt should manage task lifetimes */
+	}
+	DL_FOREACH_SAFE2(algo->al_queue_head, elt, tmp, _aq_next) {
+		DL_DELETE2(algo->al_queue_head, elt, _aq_prev, _aq_next);
 		/* fixt should manage task lifetimes */
 	}
 	free(algo);
@@ -95,13 +99,13 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 	bool schedulable = true;
 	int avail_c;
 	DL_FOREACH2(algo->al_queue_head, elt, _aq_next) {
-		/* The time available if elt was run next - until deadline */
+		/* The time available until deadline if elt was run next */
 		avail_c = fixt_task_remaining_time(elt);
 		if(elt == algo->al_queue_head) {
 			/* If elt is the head, then we can Indiana Jones our tk_c */
 			schedulable &= (fixt_task_completion_time(elt) <= avail_c);
 		} else {
-			/* Otherwise, tk_c < avail_c, because elt won't have avail_c next */
+			/* Otherwise, elt won't have avail_c next iteration */
 			schedulable &= (fixt_task_completion_time(elt) < avail_c);
 		}
 	}
@@ -126,7 +130,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	/* If no task needs to run, spin the scheduler until one is ready */
 	if (!algo->al_queue_head) {
 		log_msg(3, "[ Null Queue Head ]");
-		spin_for(min_r(algo));
+		spin_for(fixt_algo_min_r(algo));
 	} else {
 		log_msg(3, "[ Non-Null Queue Head ]");
 
@@ -135,14 +139,15 @@ void fixt_algo_run(struct fixt_algo* algo)
 		struct fixt_task* elt;
 		int prio = FIXT_ALGO_BASE_PRIO;
 		DL_FOREACH2(algo->al_queue_head, elt, _aq_next) {
-			fixt_task_set_prio(elt, --prio); /* In descending order */
+			prio--; /* In descending order */
+			fixt_task_set_prio(elt, MAX(prio, FIXT_ALGO_MIN_PRIO));
 		}
 
 		/*
 		 * Release the head task for execution if it needs to be started.
 		 * Can't use sem_getvalue() here to determine if a task is waiting or
-		 * executing, because tasks lose the CPU at the bottonm of their loop
-		 * (before they can sem_wait again).
+		 * executing, because tasks lose the CPU at the bottom of their loop
+		 * (before they can sem_wait again). This was a nasty bug
 		 */
 		if(!fixt_task_already_executing(algo->al_queue_head)) {
 			sem_post(fixt_task_get_sem_cont(algo->al_queue_head));
@@ -159,7 +164,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	log_fend(2, "fixt_algo_run");
 }
 
-int min_r(struct fixt_algo* algo)
+int fixt_algo_min_r(struct fixt_algo* algo)
 {
 	int r = INT_MAX;
 	struct fixt_task* elt;

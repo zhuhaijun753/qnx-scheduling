@@ -1,12 +1,10 @@
 /*
- * timing.c
- *
- * This file contains the implementatio nof the puhlic timing helper interface.
- * It provides functions for working with the obtuse timespec structures.
- *
- *  Created on: Dec 9, 2014
- *      Author: skk8768
- *     Project: 6
+ * File: fixt_set.h
+ * Author: Steven Kroh
+ * Date: 18 Feb 2015
+ * Description: This file contains the implementation of the puhlic timing
+ * helper interface. It provides functions for working with the
+ * obtuse timespec structures.
  */
 
 #include <stdio.h>

@@ -20,7 +20,6 @@
 #include "spin.h"
 
 #include "log/log.h"
-#include "debug.h"
 
 static int FUDGE_FACTOR;
 static int FUDGE_PARTIAL;
@@ -140,9 +139,9 @@ void spin_calibrate()
 
 	timing_timespec_sub(&t_elap, &t_post, &t_init);
 	printf(" [ Actual %ldms ]\n", t_elap.tv_nsec / 1000000);
-	printf(" [ FudgeF %d ]\n", FUDGE_FACTOR);
-	printf(" [ FudgeP %d ]\n", FUDGE_PARTIAL);
-	printf(" [ Calibration successful! ]\n");
+//	printf(" [ FudgeF %d ]\n", FUDGE_FACTOR);
+//	printf(" [ FudgeP %d ]\n", FUDGE_PARTIAL);
+//	printf(" [ Calibration successful! ]\n");
 }
 #pragma GCC pop_options
 

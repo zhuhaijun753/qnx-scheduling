@@ -21,8 +21,8 @@ struct fixt_task
 {
 	int tk_id; /* Task id */
 
-	int tk_a; /* Task run time accumlated in a single period */
-	int tk_c, tk_p, tk_d; /* Standard task timing tuple */
+	int tk_a; /* Task run time accumlated in a single scheduler period */
+	int tk_c, tk_p, tk_d; /* Execution time, period, deadline */
 	int tk_r; /* Nuber of quanta until ready to execute */
 
 	void* (*tk_routine)(void*); /* The routine run in a new thread */
@@ -33,7 +33,7 @@ struct fixt_task
 	sem_t* tk_sem_cont; /* Scheduler releases task via posting this */
 	sem_t* tk_sem_done; /* Task completes execution by posting this */
 
-	/* private use by utlist.h - OOPS our lists were clobbering each other */
+	/* Private use by utlist.h - OOPS our lists were clobbering each other */
 	struct fixt_task *_ts_prev, *_ts_next; /* Task set list */
 	struct fixt_task *_at_prev, *_at_next; /* Algo task list */
 	struct fixt_task *_aq_prev, *_aq_next; /* Algo queue list */

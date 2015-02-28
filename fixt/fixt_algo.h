@@ -13,6 +13,7 @@
 #include "fixt_hook.h"
 
 #define FIXT_ALGO_BASE_PRIO 10 /* qconn port=8000 qconn_prio=10 */
+#define FIXT_ALGO_MIN_PRIO 7
 struct fixt_task;
 
 struct fixt_algo
@@ -35,7 +36,7 @@ struct fixt_algo
 };
 
 /*
- * Create a new scheduling algorithm given the three implementation-specific
+ * Create a new scheduling algorithm given the four implementation-specific
  * hooks and a preferred scheduling policy for all task threads.
  */
 struct fixt_algo* fixt_algo_new(AlgoHook, AlgoHook, AlgoHook, AlgoHook, int policy);
@@ -77,6 +78,6 @@ void fixt_algo_halt(struct fixt_algo*);
 /*
  * Determines the minimum time until the next task becomes ready
  */
-int min_r(struct fixt_algo*);
+int fixt_algo_min_r(struct fixt_algo*);
 
 #endif

@@ -1,3 +1,10 @@
+/*
+ * File: fixt_algo_impl_rma.c
+ * Author: Steven Kroh
+ * Date: 28 Feb 2015
+ * Description: Implementation of fixt_algo for Rate Monotonic Analysis
+ */
+
 #ifndef FIXT_ALGO_IMPL_RMA_H_
 #define FIXT_ALGO_IMPL_RMA_H_
 

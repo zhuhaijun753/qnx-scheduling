@@ -1,3 +1,10 @@
+/*
+ * File: fixt_algo_impl_rma.c
+ * Author: Steven Kroh
+ * Date: 28 Feb 2015
+ * Description: Implementation of fixt_algo for Rate Monotonic Analysis
+ */
+
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -9,7 +16,6 @@
 #include "fixt_algo_impl_rma.h"
 
 #include "log/log.h"
-#include "debug.h"
 
 #define POLICY_RMA SCHED_FIFO /* No preemption under RMA */
 
@@ -42,7 +48,6 @@ void fixt_algo_impl_rma_schedule(struct fixt_algo* algo)
 	/* Only consider tasks that are ready (r <= 0) */
 	struct fixt_task *elt;
 	DL_FOREACH2 (algo->al_tasks_head, elt, _at_next) {
-		// TODO: error out if unschedulable
 		if (fixt_task_get_r(elt) <= 0) {
 			log_rchk(4, elt);
 			DL_APPEND2(algo->al_queue_head, elt, _aq_prev, _aq_next);
@@ -73,8 +78,8 @@ void fixt_algo_impl_rma_block(struct fixt_algo* algo)
  * Recalculate the r parameter across all tasks.
  *
  * If a task actually ran this iteration, then the head of the queue will
- * be that task. Adjust the r paramter by the general case. Calculate time
- * until ready for next period.
+ * be that task. Calculate time until ready for next period. All other tasks
+ * idled. These tasks were ready tk_c quanta ago.
  *
  * If no task ran, then all tasks must have their r parameter normalized to
  * zero based upon the smallest r parameter in the current task pool.
@@ -84,9 +89,9 @@ void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
 	log_func(3, "rma_recalc");
 	struct fixt_task* head = algo->al_queue_head;
 
-	int delta;
+	int delta; /* The number of quanta elapsed since last run */
 	if (head) {
-		/* Queue head chosen to run: Δ = c0,  ri' = pi - Δ + ri */
+		/* Queue head chosen to run: Δ = c,  r' = p - Δ + r */
 		log_hbef(4, head);
 
 		delta = head->tk_c;
@@ -95,10 +100,10 @@ void fixt_algo_impl_rma_recalc(struct fixt_algo* algo)
 		log_haft(4, head);
 	} else {
 		/* Normalize all r parameters: Δ = min(ri) */
-		delta = min_r(algo);
+		delta = fixt_algo_min_r(algo);
 	}
 
-	/* Tasks chosen to idle: ri' = ri - Δ */
+	/* Tasks chosen to idle: r' = r - Δ */
 	struct fixt_task* elt;
 	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
 		/* Don't do this calculation on the queue head! */

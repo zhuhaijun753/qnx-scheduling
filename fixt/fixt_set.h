@@ -24,8 +24,8 @@ struct fixt_set
 
 /*
  * Create a new task set comprised of multiple tasks. The first parameter is
- * the task set id. The second parameter is the number of following task
- * tuples. The remaining parameters, in groups of three, represent task tuples
+ * the task set id. The second parameter is the number of following params.
+ * The remaining parameters, in groups of three, represent task tuples
  * of the form (c, p, d). The size parameter must be a multiple of three.
  */
 struct fixt_set* fixt_set_new(int, int, ...);

@@ -1,3 +1,10 @@
+/*
+ * File: fixt_algo_impl_sct.c
+ * Author: Steven Kroh
+ * Date: 28 Feb 2015
+ * Description: Implementation of fixt_algo for Shortest Completion Time
+ */
+
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -11,13 +18,12 @@
 #include "fixt_algo_impl_sct.h"
 
 #include "log/log.h"
-#include "debug.h"
 
 #define POLICY_SCT SCHED_FIFO /* SCT does not actually require RR! */
 
 /*
  * This comparator compares two tasks under SCT and generates an ordering
- * such that tasks short completion times will have high priority.
+ * such that tasks with short completion times will have high priority.
  */
 static int sct_comparator(void*, void*);
 
@@ -61,12 +67,12 @@ void fixt_algo_impl_sct_schedule(struct fixt_algo* algo)
 
 /*
  * In SCT, tasks do not necessarily run to completion. The scheduler preempts
- * user tasks at a period of SPIN_QUANTUM_WIDTH_MS. This is possible because
- * the scheduler always maintains the highest priority out of any (non-QNX)
- * tasks in our system.
+ * user tasks at a period of SCT_PERIOD * SPIN_QUANTUM_WIDTH_MS. This is
+ * possible because the scheduler always maintains the highest priority out of
+ * any (non-QNX) task in our system.
  *
  * This all means user tasks may only run when the scheduler thread is blocked.
- * We block the scheduler for one quanta by using a timed wait.
+ * We block the scheduler for SCT_PERIOD quanta by using a timed wait.
  */
 void fixt_algo_impl_sct_block(struct fixt_algo* algo)
 {
@@ -89,8 +95,9 @@ void fixt_algo_impl_sct_block(struct fixt_algo* algo)
  * Recalculate the r parameter across all tasks.
  *
  * If a task actually ran this iteration, then the head of the queue will
- * be that task. Adjust the r paramter by the general case. Calculate time
- * until ready for next period.
+ * be that task. If the queue head has completed its execution, then calculate
+ * time until ready for the next period. Otherwise, all tasks were ready
+ * SCT_PERIOD quanta ago.
  *
  * If no task ran, then all tasks must have their r parameter normalized to
  * zero based upon the smallest r parameter in the current task pool.
@@ -100,7 +107,7 @@ void fixt_algo_impl_sct_recalc(struct fixt_algo* algo)
 	log_func(3, "sct_recalc");
 	struct fixt_task* head = algo->al_queue_head;
 
-	int delta;
+	int delta; /* The number of quanta elapsed since last run */
 	if (head) {
 		log_hbef(4, head);
 
@@ -120,10 +127,10 @@ void fixt_algo_impl_sct_recalc(struct fixt_algo* algo)
 		log_haft(4, head);
 	} else {
 		/* Normalize all r parameters: Δ = min(ri) */
-		delta = min_r(algo);
+		delta = fixt_algo_min_r(algo);
 	}
 
-	/* Tasks chosen to idle: ri' = ri - Δ */
+	/* Tasks chosen to idle: r' = r - Δ */
 	struct fixt_task* elt;
 	DL_FOREACH2(algo->al_tasks_head, elt, _at_next) {
 		/* Don't do this calculation on the queue head! */
@@ -153,7 +160,7 @@ static int sct_comparator(void* l, void* r)
 	struct fixt_task* task_l = (struct fixt_task*) l;
 	struct fixt_task* task_r = (struct fixt_task*) r;
 	/*
-	 * If the left task has a smaller completion time than the right task,
+	 * If the left task has a shorter completion time than the right task,
 	 * then the function will return a negative number, etc.
 	 */
 	return fixt_task_completion_time(task_l) - fixt_task_completion_time(task_r);

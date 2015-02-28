@@ -15,7 +15,6 @@
 #include "spin/spin.h"
 #include "fixt_task.h"
 
-#include "debug.h"
 #include "log/log.h"
 #include "log/kernel_trace.h"
 
