@@ -95,8 +95,8 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 	bool schedulable = true;
 	int avail_c;
 	DL_FOREACH2(algo->al_queue_head, elt, _aq_next) {
-		/* The time availalbe if elt was run next - based on deadline */
-		avail_c = fixt_task_get_d(elt) + fixt_task_get_r(elt);
+		/* The time available if elt was run next - until deadline */
+		avail_c = fixt_task_remaining_time(elt);
 		if(elt == algo->al_queue_head) {
 			/* If elt is the head, then we can Indiana Jones our tk_c */
 			schedulable &= (fixt_task_completion_time(elt) <= avail_c);
@@ -137,12 +137,14 @@ void fixt_algo_run(struct fixt_algo* algo)
 			fixt_task_set_prio(elt, --prio); /* In descending order */
 		}
 
-		/* Release the head task for execution - only if the task is waiting */
-		sem_t* sem_cont = fixt_task_get_sem_cont(algo->al_queue_head);
-		int sem_cont_value;
-		sem_getvalue(sem_cont, &sem_cont_value);
-		if(sem_cont_value == 0) { /* Post only if task is waiting! */
-			sem_post(sem_cont);
+		/*
+		 * Release the head task for execution if it needs to be started.
+		 * Can't use sem_getvalue() here to determine if a task is waiting or
+		 * executing, because tasks lose the CPU at the bottonm of their loop
+		 * (before they can sem_wait again).
+		 */
+		if(!fixt_task_already_executing(algo->al_queue_head)) {
+			sem_post(fixt_task_get_sem_cont(algo->al_queue_head));
 		}
 
 		algo->al_block(algo);

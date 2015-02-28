@@ -26,6 +26,12 @@ void spin_calibrate();
 void spin_for(int quanta);
 
 /*
+ * Consume CPU time for a particular number of quanta, but for not more
+ * than that specific number of quanta.
+ */
+void spin_for_nmt(int quanta);
+
+/*
  * Generate an absolute timespec representing the time a particular
  * number of quanta from now.
  */

@@ -10,7 +10,7 @@ void k_log_csv_start(int c);
 void k_log_csv_end(int c);
 void k_log_csv_print(void);
 
-#define LOG_K_METHOD 2
+#define LOG_K_METHOD 3
 
 #if LOG_K_METHOD == 1
 #define k_log_s(t) k_log_start(t)

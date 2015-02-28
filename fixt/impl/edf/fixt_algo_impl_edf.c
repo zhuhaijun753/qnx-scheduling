@@ -1,6 +1,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <errno.h>
 #include "utlist.h"
 #include "spin/spin.h"
 #include "fixt/fixt_hook.h"
@@ -55,15 +56,27 @@ void fixt_algo_impl_edf_schedule(struct fixt_algo* algo)
 }
 
 /*
- * In RMA, tasks run to completion, and the scheduler does not preempt tasks.
- * Therefore, we can wait without timeout on the scheduled task.
+ * In EDF, tasks do not necessarily run to completion. The scheduler preempts
+ * user tasks at a period of SPIN_QUANTUM_WIDTH_MS. This is possible because
+ * the scheduler always maintains the highest priority out of any (non-QNX)
+ * tasks in our system.
+ *
+ * This all means user tasks may only run when the scheduler thread is blocked.
+ * We block the scheduler for one quanta by using a timed wait.
  */
 void fixt_algo_impl_edf_block(struct fixt_algo* algo)
 {
 	log_func(3, "edf_block");
 
 	sem_t* sem_done = fixt_task_get_sem_done(algo->al_queue_head);
-	sem_wait(sem_done);
+	struct timespec abs_next;
+	abs_next = spin_abstime_in_quanta(EDF_PERIOD, EDF_JITTER);
+
+	if(sem_timedwait(sem_done, &abs_next) == 0) {
+		log_msg(4, "[ Scheduler Resume b/c Task Completed ]");
+	} else if(errno == ETIMEDOUT) {
+		log_msg(4, "[ Scheduler Preemption ]");
+	}
 
 	log_fend(3, "edf_block");
 }
@@ -85,11 +98,20 @@ void fixt_algo_impl_edf_recalc(struct fixt_algo* algo)
 
 	int delta;
 	if (head) {
-		/* Queue head chosen to run: Δ = c0,  pi' = di - Δ + ri */
 		log_hbef(4, head);
 
-		delta = head->tk_c;
-		head->tk_r = head->tk_p - delta + head->tk_r;
+		/* Queue head chosen to run: Δ = scheduler period */
+		delta = EDF_PERIOD;
+		head->tk_a += delta; /* Add one to the task's accumlated time */
+
+		if(fixt_task_completion_time(head) > 0) {
+			/* Still execution time left: task is still ready */
+			head->tk_r = head->tk_r - delta;
+		} else {
+			/* No execution time left: calculate time til next period */
+			head->tk_r = head->tk_p - delta + head->tk_r;
+			head->tk_a = 0; /* Reset accumulated time */
+		}
 
 		log_haft(4, head);
 	} else {
@@ -130,5 +152,5 @@ static int edf_comparator(void* l, void* r)
 	 * If the left task has a smaller period than the right task, then the
 	 * function will return a negative number, etc.
 	 */
-	return task_l->tk_d - task_r->tk_d;
+	return fixt_task_remaining_time(task_l) - fixt_task_remaining_time(task_r);
 }

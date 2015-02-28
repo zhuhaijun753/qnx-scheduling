@@ -185,7 +185,7 @@ static void prime_algo(struct fixt_algo* algo, struct fixt_set* set)
 
 static void run_test_on(struct fixt_algo* algo)
 {
-	dprintf("..run_test_on()\n");
+	log_func(1, "run_test_on");
     /*
 	 * Before the alarm, alternate between scheduling tasks and running them.
 	 * This could go on forever, but we only need a limited stream of data
@@ -205,4 +205,6 @@ static void run_test_on(struct fixt_algo* algo)
 		timing_timespec_sub(&elap, &post, &init);
 	} while (elap.tv_sec < FIXT_SECONDS_PER_TEST);
 	fixt_algo_halt(algo);
+
+	log_fend(1, "run_test_on");
 }

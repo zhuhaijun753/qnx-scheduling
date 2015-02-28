@@ -64,13 +64,11 @@ sem_t* fixt_task_run(struct fixt_task* task, int policy, int prio)
 	fcntl(task->tk_poison_pipe[0], F_SETFL, O_NONBLOCK);
 	fcntl(task->tk_poison_pipe[1], F_SETFL, O_NONBLOCK);
 
-	sem_t* cont = malloc(sizeof(*cont));
-	sem_init(cont, 0, 0); /* First sem_wait blocks */
-	task->tk_sem_cont = cont;
+	task->tk_sem_cont = malloc(sizeof(*task->tk_sem_cont));
+	sem_init(task->tk_sem_cont, 0, 0); /* First sem_wait blocks */
 
-	sem_t* done = malloc(sizeof(*done));
-	sem_init(done, 0, 0); /* First sem_wait blocks */
-	task->tk_sem_done = done;
+	task->tk_sem_done = malloc(sizeof(*task->tk_sem_done));
+	sem_init(task->tk_sem_done, 0, 0); /* First sem_wait blocks */
 
 	/*
 	 * The thread should have the appropriate scheduling policy when it
@@ -95,11 +93,13 @@ sem_t* fixt_task_run(struct fixt_task* task, int policy, int prio)
 
 	task->tk_thread = t;
 
-	return cont;
+	return task->tk_sem_cont;
 }
 
 void fixt_task_del(struct fixt_task* task)
 {
+	free(task->tk_sem_cont);
+	free(task->tk_sem_done);
 	free(task);
 }
 
@@ -128,17 +128,23 @@ static void* fixt_task_routine(void* arg)
 	while (true) {
 		/* Wait for the scheduler to post */
 		sem_wait(task->tk_sem_cont);
+
 		/* If the thread was told to quit while waiting, quit now! */
 		read(task->tk_poison_pipe[0], &pill, sizeof(POISON_PILL));
 		if (pill == POISON_PILL) break;
-
 
 		/* Preemption handles splitting execution across quanta! */
 		k_log_s(3 + task->tk_id);
 		spin_for(task->tk_c);
 		k_log_e(3 + task->tk_id);
 
-		/* Notify the scheduler that this task is done executing */
+		log_msg(5, " [ SPIN DONE ]");
+
+		/*
+		 * Notify the scheduler that this task is done executing. As soon as
+		 * this goes through, we immediately loose control. We don't get to
+		 * sem_wait above until this thread is unblocked.
+		 */
 		sem_post(task->tk_sem_done);
 	}
 
@@ -180,9 +186,19 @@ int fixt_task_get_r(struct fixt_task* task)
 	return task->tk_r;
 }
 
+bool fixt_task_already_executing(struct fixt_task* task)
+{
+	return task->tk_a > 0;
+}
+
 int fixt_task_completion_time(struct fixt_task* task)
 {
 	return task->tk_c - task->tk_a;
+}
+
+int fixt_task_remaining_time(struct fixt_task* task)
+{
+	return task->tk_d + task->tk_r;
 }
 
 sem_t* fixt_task_get_sem_cont(struct fixt_task* task)

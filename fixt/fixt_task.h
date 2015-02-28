@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 /*
  * See the architecture doc for more on this structure.
@@ -72,10 +73,20 @@ int fixt_task_get_p(struct fixt_task*);
 int fixt_task_get_d(struct fixt_task*);
 int fixt_task_get_r(struct fixt_task*);
 
-/**
+/*
+ * Return true if the task is already partway through its' execution time
+ */
+bool fixt_task_already_executing(struct fixt_task* task);
+
+/*
  * Return the number of quanta this task will take to complete
  */
 int fixt_task_completion_time(struct fixt_task*);
+
+/*
+ * Return the number of quanta remaining until this task's deadline
+ */
+int fixt_task_remaining_time(struct fixt_task* task);
 
 /*
  * Scheduler posts sem_cont to release the task for execution.

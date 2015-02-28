@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <sys/neutrino.h>
 #include <time.h>
 #include <inttypes.h>
@@ -22,13 +23,14 @@
 #include "debug.h"
 
 static int FUDGE_FACTOR;
+static int FUDGE_PARTIAL;
 
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
 void spin_calibrate()
 {
-	log_msg(0, "[ Calibrating to the host processor ]");
+	printf(" [ Calibrating to the host processor ]\n");
 
 	/* Set thread to highest user priority so we reduce jitter */
 	pthread_t self = pthread_self();
@@ -127,18 +129,20 @@ void spin_calibrate()
 	}
 
 	FUDGE_FACTOR = fudged_unit;
+	FUDGE_PARTIAL = FUDGE_FACTOR / 100;
 
 	/* Verify calibration */
-	log_msg(0, "[ Target 10ms ]");
+	printf(" [ Target 10ms ]\n");
 
 	clock_gettime(CLOCK_REALTIME, &t_init);
 	spin_for(1);
 	clock_gettime(CLOCK_REALTIME, &t_post);
 
 	timing_timespec_sub(&t_elap, &t_post, &t_init);
-	dprintf(" [ Actual %ldms ]\n", t_elap.tv_nsec / 1000000);
-
-	log_msg(0, "[ Calibration successful! ]");
+	printf(" [ Actual %ldms ]\n", t_elap.tv_nsec / 1000000);
+	printf(" [ FudgeF %d ]\n", FUDGE_FACTOR);
+	printf(" [ FudgeP %d ]\n", FUDGE_PARTIAL);
+	printf(" [ Calibration successful! ]\n");
 }
 #pragma GCC pop_options
 
@@ -149,6 +153,30 @@ void spin_for(int quanta)
 	int i, x = 0;
 	for (i = 0; i < (quanta * FUDGE_FACTOR); i++)
 	{
+		x = x + 1;
+	}
+}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+void spin_for_nmt(int quanta)
+{
+	struct timespec init, post, elap;
+	clock_gettime(CLOCK_REALTIME, &init);
+
+	const long target = quanta * SPIN_QUANTUM_WIDTH_MS * 1000000;
+
+	int i = 0;
+	int x = 0;
+	while(true) {
+		if(i++ % FUDGE_PARTIAL == 0) {
+			clock_gettime(CLOCK_REALTIME, &post);
+			timing_timespec_sub(&elap, &post, &init);
+			if(elap.tv_nsec > target) {
+				break;
+			}
+		}
 		x = x + 1;
 	}
 }

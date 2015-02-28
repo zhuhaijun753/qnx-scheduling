@@ -4,7 +4,7 @@
 #include "log.h"
 
 static char* dots[] =
-{ "", "..", "....", "......", "........" };
+{ "", "..", "....", "......", "........", ".........." };
 
 void log_func_f(int indent, char* fun)
 {
