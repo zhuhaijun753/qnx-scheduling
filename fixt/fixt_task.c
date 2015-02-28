@@ -84,11 +84,11 @@ sem_t* fixt_task_run(struct fixt_task* task, int policy, int prio)
 	pthread_t t;
 	pthread_create(&t, &attr, task->tk_routine, (void*) task);
 
-	char buf[15];
+	char buf[20];
 	int tk_c = fixt_task_get_c(task);
 	int tk_p = fixt_task_get_p(task);
 	int tk_d = fixt_task_get_d(task);
-	sprintf(buf, "(%d, %d, %d)", tk_c, tk_p, tk_d);
+	sprintf(buf, "(%d:%d:%d:%d)", task->tk_id, tk_c, tk_p, tk_d);
 	pthread_setname_np(t, buf);
 
 	task->tk_thread = t;
@@ -134,9 +134,9 @@ static void* fixt_task_routine(void* arg)
 		if (pill == POISON_PILL) break;
 
 		/* Preemption handles splitting execution across quanta! */
-		k_log_s(3 + task->tk_id);
+		k_log_s(task->tk_id);
 		spin_for(task->tk_c);
-		k_log_e(3 + task->tk_id);
+		k_log_e(task->tk_id);
 
 		log_msg(5, " [ SPIN DONE ]");
 

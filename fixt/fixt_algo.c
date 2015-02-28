@@ -86,8 +86,8 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 {
 	log_func(2, "fixt_algo_schedule");
 
+	k_log_s(LOG_K_ALGO);
 	/* Defer scheduling to implementation */
-	k_log_s(2);
 	algo->al_schedule(algo);
 
 	/* See if our queue is schedulable */
@@ -106,8 +106,8 @@ void fixt_algo_schedule(struct fixt_algo* algo)
 		}
 	}
 	algo->al_schedulable = schedulable;
+	k_log_e(LOG_K_ALGO);
 
-	k_log_e(2);
 	log_fend(2, "fixt_algo_schedule");
 }
 
@@ -130,6 +130,7 @@ void fixt_algo_run(struct fixt_algo* algo)
 	} else {
 		log_msg(3, "[ Non-Null Queue Head ]");
 
+		k_log_s(LOG_K_ALGO);
 		/* Reprioritize all threads according to the queue ordering */
 		struct fixt_task* elt;
 		int prio = FIXT_ALGO_BASE_PRIO;
@@ -146,13 +147,14 @@ void fixt_algo_run(struct fixt_algo* algo)
 		if(!fixt_task_already_executing(algo->al_queue_head)) {
 			sem_post(fixt_task_get_sem_cont(algo->al_queue_head));
 		}
+		k_log_e(LOG_K_ALGO);
 
 		algo->al_block(algo);
 	}
 
-	k_log_s(2);
+	k_log_s(LOG_K_ALGO);
 	algo->al_recalc(algo);
-	k_log_e(2);
+	k_log_e(LOG_K_ALGO);
 
 	log_fend(2, "fixt_algo_run");
 }

@@ -54,11 +54,11 @@ static void run_test_on(struct fixt_algo*);
 void fixt_init()
 {
 	/* TODO: put whole process into a high priority */
-	k_log_s(0);
+	k_log_s(LOG_K_FIXT);
 	spin_calibrate();
 	register_tasks();
 	register_algos();
-	k_log_e(0);
+	k_log_e(LOG_K_FIXT);
 }
 
 void fixt_test()

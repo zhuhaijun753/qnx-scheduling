@@ -13,11 +13,7 @@ int main(int argc, char *argv[])
 	printf("Welcome to 'Experiments with Real-Time Scheduling Algorithms'\n");
 
 	fixt_init();
-
-	k_log_s(1);
 	fixt_test();
-	k_log_e(1);
-
 	fixt_term();
 
 #if LOG_K_METHOD == 2

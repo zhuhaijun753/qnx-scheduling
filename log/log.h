@@ -1,7 +1,7 @@
 #ifndef LOG_H_
 #define LOG_H_
 
-#if 1
+#if 0
 #define log_func(i, f) log_func_f(i, f)
 #define log_fend(i, f) log_fend_f(i, f)
 #define log_rchk(i, t) log_rchk_f(i, t)

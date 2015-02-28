@@ -8,14 +8,19 @@ static struct timespec log_time[LOG_K_LENGTH];
 static int log_event[LOG_K_LENGTH];
 static int log_entry = 0;
 
+#define LOG_K_BEG 0
+#define LOG_K_END 1
+
 void k_log_start(int c)
 {
-	TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "start");
+	trace_logi(c, LOG_K_BEG, LOG_K_BEG);
+	//TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "start");
 }
 
 void k_log_end(int c)
 {
-	TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "end");
+	trace_logi(c, LOG_K_END, LOG_K_END);
+	//TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "end");
 }
 
 void k_log_csv_start(int c)

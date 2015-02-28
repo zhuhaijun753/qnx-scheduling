@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include "fixt_hook.h"
 
-#define FIXT_ALGO_BASE_PRIO 63 /* qconn port=8000 qconn_prio=10 */
+#define FIXT_ALGO_BASE_PRIO 10 /* qconn port=8000 qconn_prio=10 */
 struct fixt_task;
 
 struct fixt_algo
