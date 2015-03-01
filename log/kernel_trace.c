@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <time.h>
+#include <sys/neutrino.h>
+#include <sys/trace.h>
 #include "fixt/fixt_task.h"
 #include "kernel_trace.h"
 
@@ -13,14 +15,12 @@ static int log_entry = 0;
 
 void k_log_start(int c)
 {
-	trace_logi(c, LOG_K_BEG, LOG_K_BEG);
-	//TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "start");
+	TraceEvent(_NTO_TRACE_INSERTUSRSTREVENT, c, "beg");
 }
 
 void k_log_end(int c)
 {
-	trace_logi(c, LOG_K_END, LOG_K_END);
-	//TraceEvent(_NTO_TRACE_INSERTSUSEREVENT, c, "end");
+	TraceEvent(_NTO_TRACE_INSERTUSRSTREVENT, c, "end");
 }
 
 void k_log_csv_start(int c)
@@ -43,9 +43,10 @@ void k_log_csv_end(int c)
 	}
 }
 
-void k_log_csv_print() {
+void k_log_csv_print()
+{
 	int i;
-	for(i = 0; i < LOG_K_LENGTH; i++) {
+	for (i = 0; i < LOG_K_LENGTH; i++) {
 		struct timespec ti = log_time[i];
 		printf("%d, %d, %d, %ld\n", i, log_event[i], ti.tv_sec, ti.tv_nsec);
 	}

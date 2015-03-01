@@ -102,7 +102,7 @@ static void register_tasks()
 	/* @formatter:off */
 	set_list = NULL;
 
-	/* Task set #1 */
+	/* Task set #1 - RMA nec & suf */
 	struct fixt_set* set1 = fixt_set_new(1, 5*3,
 			1, 7, 7,
 			2, 5, 5,
@@ -110,22 +110,30 @@ static void register_tasks()
 			1, 10, 10,
 			2, 16, 16);
 
-	/* Task set #2 */
+	/* Task set #2 - RMA nec & suf */
 	struct fixt_set* set2 = fixt_set_new(2, 3*3,
 			1, 3, 3,
 			2, 5, 5,
 			1, 10, 10);
 
-	/* Task set #3 */
+	/* Task set #3 - RMA nec & suf */
 	struct fixt_set* set3 = fixt_set_new(3, 4*3,
 			1, 4, 4,
 			2, 5, 5,
 			1, 8, 8,
 			1, 10, 10);
 
+	/* Task set #4 - RMA fail */
+	struct fixt_set* set4 = fixt_set_new(4, 3*3,
+			1, 4, 4,
+			1, 3, 3,
+			1, 2, 2);
+
+
 	DL_APPEND(set_list, set1);
 	DL_APPEND(set_list, set2);
 	DL_APPEND(set_list, set3);
+	//DL_APPEND(set_list, set4);
 	/* @formatter:on */
 }
 
